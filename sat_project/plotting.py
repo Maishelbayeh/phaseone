@@ -7,6 +7,7 @@ Figures are saved under ``results/plots/`` as high-resolution PNG files.
 from __future__ import annotations
 
 from collections import defaultdict
+from statistics import mean
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
@@ -79,6 +80,15 @@ def _average_runtime_by_n_and_ratio(
     return averages
 
 
+def _group_records_by_ratio_and_n(
+    records: Iterable[SingleRunRecord],
+) -> Dict[Tuple[float, int], List[SingleRunRecord]]:
+    grouped: Dict[Tuple[float, int], List[SingleRunRecord]] = defaultdict(list)
+    for record in records:
+        grouped[(record.clause_density_ratio, record.num_variables)].append(record)
+    return grouped
+
+
 def plot_runtime_vs_num_variables(
     records: Sequence[SingleRunRecord],
     *,
@@ -116,6 +126,100 @@ def plot_runtime_vs_num_variables(
     plt.xlabel("Number of variables (n)")
     plt.ylabel("Mean runtime (seconds)")
     plt.title(title)
+    plt.grid(True, linestyle=":", alpha=0.7)
+    plt.legend(title="Clause density")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=160)
+    plt.close()
+
+
+def plot_satisfied_clauses_vs_num_variables(
+    records: Sequence[SingleRunRecord],
+    *,
+    output_path: Path,
+    title: str = "Satisfied clauses vs. number of variables",
+) -> None:
+    """
+    One curve per clause-density ratio: n on x-axis, mean satisfied clauses on y-axis.
+    """
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    grouped = _group_records_by_ratio_and_n(records)
+    ratios = sorted({record.clause_density_ratio for record in records})
+
+    plt.figure(figsize=(9, 5))
+    for ratio in ratios:
+        candidate_ns = sorted(
+            {record.num_variables for record in records if record.clause_density_ratio == ratio}
+        )
+        points = []
+        for num_variables in candidate_ns:
+            group_key = (ratio, num_variables)
+            group_records = grouped.get(group_key, [])
+            if group_records:
+                points.append((num_variables, mean(r.satisfied_clauses for r in group_records)))
+        if not points:
+            continue
+        x_values = [value[0] for value in points]
+        y_values = [value[1] for value in points]
+        plt.plot(
+            x_values,
+            y_values,
+            marker="o",
+            linewidth=1.8,
+            label=f"m/n = {ratio}",
+        )
+
+    plt.xlabel("Number of variables (n)")
+    plt.ylabel("Mean satisfied clauses")
+    plt.title(title)
+    plt.grid(True, linestyle=":", alpha=0.7)
+    plt.legend(title="Clause density")
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=160)
+    plt.close()
+
+
+def plot_satisfaction_rate_vs_num_variables(
+    records: Sequence[SingleRunRecord],
+    *,
+    output_path: Path,
+    title: str = "Satisfaction rate vs. number of variables",
+) -> None:
+    """
+    One curve per clause-density ratio: n on x-axis, mean satisfaction rate (%) on y-axis.
+    """
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    grouped = _group_records_by_ratio_and_n(records)
+    ratios = sorted({record.clause_density_ratio for record in records})
+
+    plt.figure(figsize=(9, 5))
+    for ratio in ratios:
+        candidate_ns = sorted(
+            {record.num_variables for record in records if record.clause_density_ratio == ratio}
+        )
+        points = []
+        for num_variables in candidate_ns:
+            group_key = (ratio, num_variables)
+            group_records = grouped.get(group_key, [])
+            if group_records:
+                mean_rate_percent = 100.0 * mean(r.satisfaction_rate for r in group_records)
+                points.append((num_variables, mean_rate_percent))
+        if not points:
+            continue
+        x_values = [value[0] for value in points]
+        y_values = [value[1] for value in points]
+        plt.plot(
+            x_values,
+            y_values,
+            marker="D",
+            linewidth=1.8,
+            label=f"m/n = {ratio}",
+        )
+
+    plt.xlabel("Number of variables (n)")
+    plt.ylabel("Mean satisfaction rate (%)")
+    plt.title(title)
+    plt.ylim(0.0, 100.0)
     plt.grid(True, linestyle=":", alpha=0.7)
     plt.legend(title="Clause density")
     plt.tight_layout()

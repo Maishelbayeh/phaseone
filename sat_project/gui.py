@@ -10,22 +10,25 @@ from __future__ import annotations
 import queue
 import threading
 import traceback
+from dataclasses import dataclass
 from pathlib import Path
 from tkinter import ttk, messagebox, scrolledtext, filedialog
 import tkinter as tk
-from typing import List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from experiments import (
-    DEFAULT_CLAUSE_DENSITY_RATIOS,
-    DEFAULT_VARIABLE_COUNTS,
     SingleRunRecord,
-    run_single_experiment,
-    save_records_csv,
-    save_records_json,
 )
 from hill_climbing import hill_climb_with_random_restarts
-from plotting import plot_convergence_history, plot_runtime_vs_num_variables
-from sat_generator import compute_clause_count_from_density, load_instance_formula, load_instance_formula_from_file
+from simulated_annealing import simulated_annealing_search
+from tabu_search import tabu_search_solve
+from plotting import (
+    plot_convergence_history,
+    plot_runtime_vs_num_variables,
+    plot_satisfied_clauses_vs_num_variables,
+    plot_satisfaction_rate_vs_num_variables,
+)
+from sat_generator import load_instance_formula_from_file
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -58,11 +61,29 @@ def _parse_float_list(text: str) -> List[float]:
 
 
 class SatControlApp(ttk.Frame):
-    """Main window: two tabs for single instance vs. batch grid."""
+    """Main window: solver tabs for single run and one batch tab."""
+
+    @dataclass(frozen=True)
+    class SolverParameterSpec:
+        key: str
+        label: str
+        default_value: str
+        min_value: Optional[float] = None
+        max_value: Optional[float] = None
+        integer_only: bool = True
+
+    @dataclass(frozen=True)
+    class SolverUiSpec:
+        key: str
+        title: str
+        button_text: str
+        solver_display_name: str
+        hint: str
+        parameters: Tuple["SatControlApp.SolverParameterSpec", ...]
 
     def __init__(self, master: tk.Tk) -> None:
         super().__init__(master, padding=10)
-        self.master.title("3-SAT Hill Climbing — Control Panel")
+        self.master.title("3-SAT Local Search — Control Panel")
         self.master.minsize(640, 520)
         self.grid(row=0, column=0, sticky="nsew")
         master.rowconfigure(0, weight=1)
@@ -71,19 +92,95 @@ class SatControlApp(ttk.Frame):
         self._work_queue: queue.Queue[Tuple[str, object]] = queue.Queue()
         self._batch_total_cells = 0
         self._batch_completed = 0
+        self._instance_choices: List[str] = []
+        self._solver_tab_state: Dict[str, Dict[str, Any]] = {}
 
         notebook = ttk.Notebook(self)
         notebook.grid(row=0, column=0, sticky="nsew")
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)
 
-        single_tab = ttk.Frame(notebook, padding=8)
+        hill_tab = ttk.Frame(notebook, padding=8)
+        simulated_annealing_tab = ttk.Frame(notebook, padding=8)
+        tabu_tab = ttk.Frame(notebook, padding=8)
         batch_tab = ttk.Frame(notebook, padding=8)
-        notebook.add(single_tab, text="Single run")
+        notebook.add(hill_tab, text="Hill Climbing")
+        notebook.add(simulated_annealing_tab, text="Simulated Annealing")
+        notebook.add(tabu_tab, text="Tabu Search")
         notebook.add(batch_tab, text="Batch grid")
 
-        self._build_single_run_tab(single_tab)
+        self._build_solver_tab(
+            hill_tab,
+            self.SolverUiSpec(
+                key="hill_climbing",
+                title="Select SAT Instance",
+                button_text="Run hill climbing",
+                solver_display_name="Hill Climbing",
+                hint=(
+                    "Loads the selected pre-generated instance from disk, runs hill climbing, "
+                    "and saves a convergence plot under results/plots/."
+                ),
+                parameters=(
+                    self.SolverParameterSpec("solver_seed", "Solver seed", "456", min_value=0),
+                    self.SolverParameterSpec(
+                        "max_iterations_per_restart",
+                        "Max iterations / restart",
+                        "500",
+                        min_value=1,
+                    ),
+                    self.SolverParameterSpec(
+                        "max_random_restarts",
+                        "Max random restarts",
+                        "8",
+                        min_value=1,
+                    ),
+                ),
+            ),
+            on_run=self._on_run_hill_climbing,
+        )
+        self._build_solver_tab(
+            simulated_annealing_tab,
+            self.SolverUiSpec(
+                key="simulated_annealing",
+                title="Select SAT Instance",
+                button_text="Run simulated annealing",
+                solver_display_name="Simulated Annealing",
+                hint=(
+                    "Loads the selected pre-generated instance from disk, runs simulated annealing, "
+                    "and saves a convergence plot under results/plots/."
+                ),
+                parameters=(
+                    self.SolverParameterSpec("solver_seed", "Solver seed", "456", min_value=0),
+                    self.SolverParameterSpec("max_iterations", "Max iterations", "2000", min_value=1),
+                    self.SolverParameterSpec("initial_temperature", "Initial temperature", "10.0", min_value=0.000001, integer_only=False),
+                    self.SolverParameterSpec("cooling_rate", "Cooling rate", "0.995", min_value=0.000001, max_value=0.999999, integer_only=False),
+                    self.SolverParameterSpec("min_temperature", "Minimum temperature", "0.01", min_value=0.000001, integer_only=False),
+                ),
+            ),
+            on_run=self._on_run_simulated_annealing,
+        )
+        self._build_solver_tab(
+            tabu_tab,
+            self.SolverUiSpec(
+                key="tabu_search",
+                title="Select SAT Instance",
+                button_text="Run tabu search",
+                solver_display_name="Tabu Search",
+                hint=(
+                    "Loads the selected pre-generated instance from disk, runs tabu search, "
+                    "and saves a convergence plot under results/plots/."
+                ),
+                parameters=(
+                    self.SolverParameterSpec("solver_seed", "Solver seed", "456", min_value=0),
+                    self.SolverParameterSpec("max_iterations", "Max iterations", "2000", min_value=1),
+                    self.SolverParameterSpec("tabu_tenure", "Tabu tenure", "12", min_value=1),
+                ),
+            ),
+            on_run=self._on_run_tabu_search,
+        )
         self._build_batch_tab(batch_tab)
+
+        self._refresh_instance_list()
 
         log_frame = ttk.LabelFrame(self, text="Log", padding=6)
         log_frame.grid(row=1, column=0, sticky="nsew", pady=(10, 0))
@@ -100,20 +197,30 @@ class SatControlApp(ttk.Frame):
 
         self.after(150, self._poll_work_queue)
 
-    def _build_single_run_tab(self, parent: ttk.Frame) -> None:
+    def _build_solver_tab(
+        self,
+        parent: ttk.Frame,
+        solver_spec: SolverUiSpec,
+        *,
+        on_run: Callable[[], None],
+    ) -> None:
         parent.columnconfigure(1, weight=1)
 
         row = 0
-        ttk.Label(parent, text="Select SAT Instance").grid(row=row, column=0, sticky="w", pady=2)
-        self.single_instance_path = tk.StringVar(value="")
-        self.single_instance_combo = ttk.Combobox(parent, textvariable=self.single_instance_path, width=48, state="readonly")
-        self.single_instance_combo.grid(row=row, column=1, sticky="ew", pady=2)
-        self.single_instance_combo.bind("<<ComboboxSelected>>", lambda _e: self._on_instance_selected())
+        ttk.Label(parent, text=solver_spec.title).grid(row=row, column=0, sticky="w", pady=2)
+        instance_path = tk.StringVar(value="")
+        instance_combo = ttk.Combobox(parent, textvariable=instance_path, width=48, state="readonly")
+        instance_combo.grid(row=row, column=1, sticky="ew", pady=2)
+        instance_combo.bind("<<ComboboxSelected>>", lambda _e, key=solver_spec.key: self._on_instance_selected(key))
 
         row += 1
         browse_frame = ttk.Frame(parent)
         browse_frame.grid(row=row, column=0, columnspan=2, sticky="w")
-        ttk.Button(browse_frame, text="Browse…", command=self._on_browse_instance).grid(row=0, column=0, sticky="w", padx=(0, 6))
+        ttk.Button(
+            browse_frame,
+            text="Browse…",
+            command=lambda key=solver_spec.key: self._on_browse_instance(key),
+        ).grid(row=0, column=0, sticky="w", padx=(0, 6))
         ttk.Button(browse_frame, text="Refresh", command=self._refresh_instance_list).grid(row=0, column=1, sticky="w")
 
         row += 1
@@ -121,48 +228,43 @@ class SatControlApp(ttk.Frame):
         info.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(6, 2))
         for c in range(2):
             info.columnconfigure(c, weight=1)
-        self.info_n = tk.StringVar(value="-")
-        self.info_m = tk.StringVar(value="-")
-        self.info_ratio = tk.StringVar(value="-")
+        info_n = tk.StringVar(value="-")
+        info_m = tk.StringVar(value="-")
+        info_ratio = tk.StringVar(value="-")
         ttk.Label(info, text="n =").grid(row=0, column=0, sticky="e")
-        ttk.Label(info, textvariable=self.info_n).grid(row=0, column=1, sticky="w")
+        ttk.Label(info, textvariable=info_n).grid(row=0, column=1, sticky="w")
         ttk.Label(info, text="m =").grid(row=1, column=0, sticky="e")
-        ttk.Label(info, textvariable=self.info_m).grid(row=1, column=1, sticky="w")
+        ttk.Label(info, textvariable=info_m).grid(row=1, column=1, sticky="w")
         ttk.Label(info, text="ratio =").grid(row=2, column=0, sticky="e")
-        ttk.Label(info, textvariable=self.info_ratio).grid(row=2, column=1, sticky="w")
+        ttk.Label(info, textvariable=info_ratio).grid(row=2, column=1, sticky="w")
 
-        # Solver settings (kept)
-
-        row += 1
-        ttk.Label(parent, text="Solver seed").grid(row=row, column=0, sticky="w", pady=2)
-        self.single_solver_seed = tk.StringVar(value="456")
-        ttk.Entry(parent, textvariable=self.single_solver_seed, width=14).grid(row=row, column=1, sticky="w", pady=2)
-
-        row += 1
-        ttk.Label(parent, text="Max iterations / restart").grid(row=row, column=0, sticky="w", pady=2)
-        self.single_max_iter = tk.StringVar(value="500")
-        ttk.Entry(parent, textvariable=self.single_max_iter, width=14).grid(row=row, column=1, sticky="w", pady=2)
+        parameter_vars: Dict[str, tk.StringVar] = {}
+        for parameter in solver_spec.parameters:
+            row += 1
+            ttk.Label(parent, text=parameter.label).grid(row=row, column=0, sticky="w", pady=2)
+            variable = tk.StringVar(value=parameter.default_value)
+            parameter_vars[parameter.key] = variable
+            ttk.Entry(parent, textvariable=variable, width=14).grid(row=row, column=1, sticky="w", pady=2)
 
         row += 1
-        ttk.Label(parent, text="Max random restarts").grid(row=row, column=0, sticky="w", pady=2)
-        self.single_max_restarts = tk.StringVar(value="8")
-        ttk.Entry(parent, textvariable=self.single_max_restarts, width=14).grid(row=row, column=1, sticky="w", pady=2)
-
-        row += 1
-        btn = ttk.Button(parent, text="Run single instance", command=self._on_run_single)
+        btn = ttk.Button(parent, text=solver_spec.button_text, command=on_run)
         btn.grid(row=row, column=0, columnspan=2, pady=10, sticky="w")
 
         row += 1
-        hint = (
-            "Loads the selected pre-generated instance from disk, runs hill climbing, "
-            "and saves a convergence plot under results/plots/."
-        )
-        ttk.Label(parent, text=hint, wraplength=560, justify="left").grid(
+        ttk.Label(parent, text=solver_spec.hint, wraplength=560, justify="left").grid(
             row=row, column=0, columnspan=2, sticky="w", pady=(0, 4)
         )
 
-        # Populate instance list initially
-        self._refresh_instance_list()
+        self._solver_tab_state[solver_spec.key] = {
+            "spec": solver_spec,
+            "instance_path": instance_path,
+            "instance_combo": instance_combo,
+            "selected_instance_path": "",
+            "info_n": info_n,
+            "info_m": info_m,
+            "info_ratio": info_ratio,
+            "parameters": parameter_vars,
+        }
 
     def _build_batch_tab(self, parent: ttk.Frame) -> None:
         parent.columnconfigure(1, weight=1)
@@ -185,6 +287,25 @@ class SatControlApp(ttk.Frame):
         ttk.Label(parent, textvariable=self.batch_dataset_count_var).grid(row=row, column=1, sticky="w", pady=2)
 
         row += 1
+        ttk.Label(parent, text="Algorithm").grid(row=row, column=0, sticky="w", pady=2)
+        self.batch_algorithm = tk.StringVar(value="Hill Climbing")
+        self.batch_algorithm_combo = ttk.Combobox(
+            parent,
+            textvariable=self.batch_algorithm,
+            values=("Hill Climbing", "Simulated Annealing", "Tabu Search"),
+            state="readonly",
+            width=24,
+        )
+        self.batch_algorithm_combo.grid(row=row, column=1, sticky="w", pady=2)
+
+        row += 1
+        ttk.Label(parent, text="Solver base seed").grid(row=row, column=0, sticky="w", pady=2)
+        self.batch_solver_base_seed = tk.StringVar(value="42")
+        ttk.Entry(parent, textvariable=self.batch_solver_base_seed, width=14).grid(
+            row=row, column=1, sticky="w", pady=2
+        )
+
+        row += 1
         ttk.Label(parent, text="Max iterations / restart (blank = auto)").grid(
             row=row, column=0, sticky="w", pady=2
         )
@@ -197,6 +318,26 @@ class SatControlApp(ttk.Frame):
         ttk.Label(parent, text="Max random restarts").grid(row=row, column=0, sticky="w", pady=2)
         self.batch_max_restarts = tk.StringVar(value="8")
         ttk.Entry(parent, textvariable=self.batch_max_restarts, width=14).grid(row=row, column=1, sticky="w", pady=2)
+
+        row += 1
+        ttk.Label(parent, text="Initial temperature (SA)").grid(row=row, column=0, sticky="w", pady=2)
+        self.batch_initial_temperature = tk.StringVar(value="10.0")
+        ttk.Entry(parent, textvariable=self.batch_initial_temperature, width=14).grid(row=row, column=1, sticky="w", pady=2)
+
+        row += 1
+        ttk.Label(parent, text="Cooling rate (SA)").grid(row=row, column=0, sticky="w", pady=2)
+        self.batch_cooling_rate = tk.StringVar(value="0.995")
+        ttk.Entry(parent, textvariable=self.batch_cooling_rate, width=14).grid(row=row, column=1, sticky="w", pady=2)
+
+        row += 1
+        ttk.Label(parent, text="Minimum temperature (SA)").grid(row=row, column=0, sticky="w", pady=2)
+        self.batch_min_temperature = tk.StringVar(value="0.01")
+        ttk.Entry(parent, textvariable=self.batch_min_temperature, width=14).grid(row=row, column=1, sticky="w", pady=2)
+
+        row += 1
+        ttk.Label(parent, text="Tabu tenure (Tabu)").grid(row=row, column=0, sticky="w", pady=2)
+        self.batch_tabu_tenure = tk.StringVar(value="12")
+        ttk.Entry(parent, textvariable=self.batch_tabu_tenure, width=14).grid(row=row, column=1, sticky="w", pady=2)
 
         row += 1
         btn = ttk.Button(parent, text="Run full grid", command=self._on_run_batch)
@@ -224,8 +365,9 @@ class SatControlApp(ttk.Frame):
 
         row += 1
         hint = (
-            "Runs hill climbing on all pre-generated instances found in the selected dataset folder. "
-            "Writes results/batch_results.csv and results/plots/batch_runtime_vs_num_variables.png."
+            "Runs the selected algorithm (Hill Climbing, Simulated Annealing, or Tabu Search) "
+            "on all pre-generated instances in the selected dataset folder. Writes "
+            "results/batch_results_<algorithm>.csv plus runtime and satisfaction plots in results/plots/."
         )
         ttk.Label(parent, text=hint, wraplength=560, justify="left").grid(
             row=row, column=0, columnspan=2, sticky="w"
@@ -270,29 +412,43 @@ class SatControlApp(ttk.Frame):
         self.after(150, self._poll_work_queue)
 
     def _refresh_instance_list(self) -> None:
-        # Search common locations for instances
+        """Search common locations and update all solver tabs."""
         candidates: List[str] = []
-        for base in (PROJECT_ROOT.parent / "data" / "instances", PROJECT_ROOT / "data" / "instances", PROJECT_ROOT / "instances"):
+        search_roots = (
+            PROJECT_ROOT.parent / "data" / "instances",
+            PROJECT_ROOT / "data" / "instances",
+            PROJECT_ROOT / "instances",
+        )
+        for base in search_roots:
             if base.exists():
                 for path in base.rglob("3sat_*.json"):
-                    # Build display text: n=?, m=?, filename
                     try:
-                        import json
-                        with path.open("r", encoding="utf-8") as f:
-                            data = json.load(f)
-                        n = int(data.get("n", 0))
-                        m = int(data.get("m", 0))
+                        n, m = self._read_instance_size(path)
                         label = f"n={n} | m={m} | file: {path.name}"
                     except Exception:
                         label = f"file: {path.name}"
                     candidates.append(f"{label}||{str(path)}")
-        candidates.sort()
-        display_values = [entry.split("||", 1)[0] for entry in candidates]
+
+        candidates = sorted(set(candidates))
         self._instance_choices = candidates
-        self.single_instance_combo["values"] = display_values
-        if display_values and not self.single_instance_path.get():
-            self.single_instance_combo.current(0)
-            self._on_instance_selected()
+        display_values = [entry.split("||", 1)[0] for entry in candidates]
+
+        for solver_key in self._solver_tab_state:
+            state = self._solver_tab_state[solver_key]
+            combo: ttk.Combobox = state["instance_combo"]  # type: ignore[assignment]
+            selected_var: tk.StringVar = state["instance_path"]  # type: ignore[assignment]
+            combo["values"] = display_values
+
+            if not display_values:
+                state["selected_instance_path"] = ""
+                self._update_instance_info_labels(solver_key, "-", "-", "-")
+                continue
+
+            if selected_var.get() not in display_values:
+                combo.current(0)
+                selected_var.set(display_values[0])
+
+            self._on_instance_selected(solver_key)
 
     def _refresh_dataset_preview(self) -> None:
         dataset_dir = Path(str(self.batch_dataset_dir.get()).strip())
@@ -311,125 +467,270 @@ class SatControlApp(ttk.Frame):
             self.batch_dataset_dir.set(folder)
             self._refresh_dataset_preview()
 
-    def _on_browse_instance(self) -> None:
+    def _on_browse_instance(self, solver_key: str) -> None:
         file_path = filedialog.askopenfilename(
             title="Select SAT Instance JSON",
             filetypes=[("JSON files", "*.json")],
             initialdir=str((PROJECT_ROOT.parent / "data" / "instances"))
         )
         if file_path:
-            # Set selection directly
             try:
-                import json
-                with open(file_path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                n = int(data.get("n", 0))
-                m = int(data.get("m", 0))
+                n, m = self._read_instance_size(Path(file_path))
                 label = f"n={n} | m={m} | file: {Path(file_path).name}"
             except Exception:
                 label = f"file: {Path(file_path).name}"
-            entry = f"{label}||{file_path}"
-            self._instance_choices = getattr(self, "_instance_choices", [])
-            self._instance_choices.append(entry)
-            self.single_instance_combo["values"] = [e.split("||", 1)[0] for e in self._instance_choices]
-            self.single_instance_path.set(label)
-            self._on_instance_selected()
 
-    def _on_instance_selected(self) -> None:
-        # Update info panel from selected entry
-        display = self.single_instance_path.get()
+            entry = f"{label}||{file_path}"
+            if entry not in self._instance_choices:
+                self._instance_choices.append(entry)
+            self._instance_choices = sorted(set(self._instance_choices))
+
+            state = self._solver_tab_state[solver_key]
+            selected_var: tk.StringVar = state["instance_path"]  # type: ignore[assignment]
+            selected_var.set(label)
+            self._refresh_instance_list()
+            self._on_instance_selected(solver_key)
+
+    def _on_instance_selected(self, solver_key: str) -> None:
+        state = self._solver_tab_state[solver_key]
+        selected_var: tk.StringVar = state["instance_path"]  # type: ignore[assignment]
+        display = selected_var.get()
+
         entry = None
-        for item in getattr(self, "_instance_choices", []):
+        for item in self._instance_choices:
             if item.startswith(display + "||"):
                 entry = item
                 break
+
         if entry is None:
-            self.info_n.set("-")
-            self.info_m.set("-")
-            self.info_ratio.set("-")
+            state["selected_instance_path"] = ""
+            self._update_instance_info_labels(solver_key, "-", "-", "-")
             return
+
         file_path = entry.split("||", 1)[1]
         try:
-            import json
-            with open(file_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            n = int(data.get("n", 0))
-            m = int(data.get("m", 0))
+            n, m = self._read_instance_size(Path(file_path))
             ratio = (m / n) if n else 0.0
-            self.info_n.set(str(n))
-            self.info_m.set(str(m))
-            self.info_ratio.set(f"{ratio:.3f}")
-            self._selected_instance_path = file_path
+            self._update_instance_info_labels(solver_key, str(n), str(m), f"{ratio:.3f}")
+            state["selected_instance_path"] = file_path
         except Exception:
-            self.info_n.set("-")
-            self.info_m.set("-")
-            self.info_ratio.set("-")
-            self._selected_instance_path = ""
+            state["selected_instance_path"] = ""
+            self._update_instance_info_labels(solver_key, "-", "-", "-")
 
-    def _on_run_single(self) -> None:
+    def _read_instance_size(self, instance_path: Path) -> Tuple[int, int]:
+        import json
+
+        with instance_path.open("r", encoding="utf-8") as file_obj:
+            data = json.load(file_obj)
+        return int(data.get("n", 0)), int(data.get("m", 0))
+
+    def _update_instance_info_labels(self, solver_key: str, n_value: str, m_value: str, ratio_value: str) -> None:
+        state = self._solver_tab_state[solver_key]
+        info_n_var: tk.StringVar = state["info_n"]  # type: ignore[assignment]
+        info_m_var: tk.StringVar = state["info_m"]  # type: ignore[assignment]
+        info_ratio_var: tk.StringVar = state["info_ratio"]  # type: ignore[assignment]
+        info_n_var.set(n_value)
+        info_m_var.set(m_value)
+        info_ratio_var.set(ratio_value)
+
+    def _read_solver_int(self, solver_key: str, parameter_key: str, parameter_label: str) -> int:
+        state = self._solver_tab_state[solver_key]
+        parameter_vars: Dict[str, tk.StringVar] = state["parameters"]  # type: ignore[assignment]
         try:
-            selected_path = getattr(self, "_selected_instance_path", "")
-            if not selected_path:
-                messagebox.showerror("No instance selected", "Please select a SAT instance first.")
-                return
-            # Load to extract n/m for display and to build formula
-            import json
-            with open(selected_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            num_variables = int(data["n"])
-            num_clauses = int(data["m"])
-            solver_seed = int(self.single_solver_seed.get().strip())
-            max_iterations = int(self.single_max_iter.get().strip())
-            max_restarts = int(self.single_max_restarts.get().strip())
-        except ValueError:
-            messagebox.showerror("Invalid input", "Please enter valid numbers in all single-run fields.")
+            return int(parameter_vars[parameter_key].get().strip())
+        except ValueError as exc:
+            raise ValueError(f"{parameter_label} must be an integer.") from exc
+
+    def _read_solver_float(self, solver_key: str, parameter_key: str, parameter_label: str) -> float:
+        state = self._solver_tab_state[solver_key]
+        parameter_vars: Dict[str, tk.StringVar] = state["parameters"]  # type: ignore[assignment]
+        try:
+            return float(parameter_vars[parameter_key].get().strip())
+        except ValueError as exc:
+            raise ValueError(f"{parameter_label} must be a number.") from exc
+
+    def _load_selected_instance_for_solver(self, solver_key: str) -> Tuple[str, int, int]:
+        state = self._solver_tab_state[solver_key]
+        selected_path = str(state.get("selected_instance_path", ""))
+        if not selected_path:
+            raise ValueError("Please select a SAT instance first.")
+
+        num_variables, num_clauses = self._read_instance_size(Path(selected_path))
+        if num_variables < 3 or num_clauses < 1:
+            raise ValueError("The selected SAT instance is invalid for 3-SAT.")
+        return selected_path, num_variables, num_clauses
+
+    def _on_run_hill_climbing(self) -> None:
+        solver_key = "hill_climbing"
+        try:
+            selected_path, num_variables, num_clauses = self._load_selected_instance_for_solver(solver_key)
+            solver_seed = self._read_solver_int(solver_key, "solver_seed", "Solver seed")
+            max_iterations = self._read_solver_int(
+                solver_key,
+                "max_iterations_per_restart",
+                "Max iterations / restart",
+            )
+            max_restarts = self._read_solver_int(solver_key, "max_random_restarts", "Max random restarts")
+
+            if max_iterations < 1:
+                raise ValueError("Max iterations / restart must be at least 1.")
+            if max_restarts < 1:
+                raise ValueError("Max random restarts must be at least 1.")
+        except ValueError as exc:
+            messagebox.showerror("Invalid input", str(exc))
             return
 
-        if num_variables < 3 or num_clauses < 1:
-            messagebox.showerror("Invalid n", "n must be at least 3 for 3-SAT.")
+        def run_solver(formula: Any) -> Any:
+            return hill_climb_with_random_restarts(
+                formula,
+                max_iterations_per_restart=max_iterations,
+                max_random_restarts=max_restarts,
+                random_seed=solver_seed,
+            )
+
+        self._run_single_solver(
+            solver_name="Hill Climbing",
+            selected_path=selected_path,
+            num_variables=num_variables,
+            num_clauses=num_clauses,
+            plot_file_name="gui_hill_climbing_convergence.png",
+            run_solver=run_solver,
+            iterations_label="Iterations (improving flips)",
+        )
+
+    def _on_run_simulated_annealing(self) -> None:
+        solver_key = "simulated_annealing"
+        try:
+            selected_path, num_variables, num_clauses = self._load_selected_instance_for_solver(solver_key)
+            solver_seed = self._read_solver_int(solver_key, "solver_seed", "Solver seed")
+            max_iterations = self._read_solver_int(solver_key, "max_iterations", "Max iterations")
+            initial_temperature = self._read_solver_float(
+                solver_key,
+                "initial_temperature",
+                "Initial temperature",
+            )
+            cooling_rate = self._read_solver_float(solver_key, "cooling_rate", "Cooling rate")
+            min_temperature = self._read_solver_float(solver_key, "min_temperature", "Minimum temperature")
+
+            if max_iterations < 1:
+                raise ValueError("Max iterations must be at least 1.")
+            if initial_temperature <= 0.0:
+                raise ValueError("Initial temperature must be greater than 0.")
+            if cooling_rate <= 0.0 or cooling_rate >= 1.0:
+                raise ValueError("Cooling rate must be between 0 and 1.")
+            if min_temperature <= 0.0:
+                raise ValueError("Minimum temperature must be greater than 0.")
+            if min_temperature >= initial_temperature:
+                raise ValueError("Minimum temperature must be less than initial temperature.")
+        except ValueError as exc:
+            messagebox.showerror("Invalid input", str(exc))
             return
-        if max_iterations < 1 or max_restarts < 1:
-            messagebox.showerror("Invalid search limits", "Iterations and restarts must be at least 1.")
+
+        def run_solver(formula: Any) -> Any:
+            return simulated_annealing_search(
+                formula,
+                max_iterations=max_iterations,
+                initial_temperature=initial_temperature,
+                cooling_rate=cooling_rate,
+                min_temperature=min_temperature,
+                random_seed=solver_seed,
+            )
+
+        self._run_single_solver(
+            solver_name="Simulated Annealing",
+            selected_path=selected_path,
+            num_variables=num_variables,
+            num_clauses=num_clauses,
+            plot_file_name="gui_simulated_annealing_convergence.png",
+            run_solver=run_solver,
+            iterations_label="Iterations",
+        )
+
+    def _on_run_tabu_search(self) -> None:
+        solver_key = "tabu_search"
+        try:
+            selected_path, num_variables, num_clauses = self._load_selected_instance_for_solver(solver_key)
+            solver_seed = self._read_solver_int(solver_key, "solver_seed", "Solver seed")
+            max_iterations = self._read_solver_int(solver_key, "max_iterations", "Max iterations")
+            tabu_tenure = self._read_solver_int(solver_key, "tabu_tenure", "Tabu tenure")
+
+            if max_iterations < 1:
+                raise ValueError("Max iterations must be at least 1.")
+            if tabu_tenure < 1:
+                raise ValueError("Tabu tenure must be at least 1.")
+        except ValueError as exc:
+            messagebox.showerror("Invalid input", str(exc))
             return
+
+        def run_solver(formula: Any) -> Any:
+            return tabu_search_solve(
+                formula,
+                max_iterations=max_iterations,
+                tabu_tenure=tabu_tenure,
+                random_seed=solver_seed,
+            )
+
+        self._run_single_solver(
+            solver_name="Tabu Search",
+            selected_path=selected_path,
+            num_variables=num_variables,
+            num_clauses=num_clauses,
+            plot_file_name="gui_tabu_search_convergence.png",
+            run_solver=run_solver,
+            iterations_label="Iterations",
+        )
+
+    def _run_single_solver(
+        self,
+        *,
+        solver_name: str,
+        selected_path: str,
+        num_variables: int,
+        num_clauses: int,
+        plot_file_name: str,
+        run_solver: Callable[[Any], Any],
+        iterations_label: str,
+    ) -> None:
+        ratio = num_clauses / num_variables if num_variables else 0.0
 
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
-        self._set_status("Running single instance…")
-        self._append_log(f"--- Single run started on: {Path(selected_path).name} ---")
+        self._set_status(f"Running {solver_name}...")
+        self._append_log(f"--- {solver_name} started on: {Path(selected_path).name} ---")
 
         def worker() -> None:
+            if not selected_path:
+                self._work_queue.put(("error", "No instance selected."))
+                self._work_queue.put(("status", "Error."))
+                return
+
             try:
                 formula = load_instance_formula_from_file(selected_path)
-                result = hill_climb_with_random_restarts(
-                    formula,
-                    max_iterations_per_restart=max_iterations,
-                    max_random_restarts=max_restarts,
-                    random_seed=solver_seed,
-                )
+                result = run_solver(formula)
 
-                plot_path = PLOTS_DIR / "gui_single_convergence.png"
+                plot_path = PLOTS_DIR / plot_file_name
                 plot_convergence_history(
                     result.merit_history,
                     result.total_clauses,
                     output_path=plot_path,
-                    title=f"Single run (n={num_variables}, m={num_clauses}, ratio={num_clauses / num_variables:.3f})",
+                    title=f"{solver_name} (n={num_variables}, m={num_clauses}, ratio={ratio:.3f})",
                 )
 
                 lines = [
-                    f"n={num_variables}, m={num_clauses}, m/n ~ {num_clauses / num_variables:.4f}",
-                    f"Satisfied clauses: {result.best_merit} / {result.total_clauses}",
-                    f"Fully satisfied: {result.fully_satisfied}",
-                    f"Iterations (improving flips): {result.iterations_used}",
-                    f"Restarts used: {result.restart_count}",
-                    f"Runtime: {result.runtime_seconds:.4f} s",
-                    f"Convergence plot: {plot_path}",
+                    f"[{solver_name}] n={num_variables}, m={num_clauses}, m/n ~ {ratio:.4f}",
+                    f"[{solver_name}] Satisfied clauses: {result.best_merit} / {result.total_clauses}",
+                    f"[{solver_name}] Fully satisfied: {result.fully_satisfied}",
+                    f"[{solver_name}] {iterations_label}: {result.iterations_used}",
+                    f"[{solver_name}] Restarts used: {result.restart_count}",
+                    f"[{solver_name}] Runtime: {result.runtime_seconds:.4f} s",
+                    f"[{solver_name}] Convergence plot: {plot_path}",
                 ]
                 for line in lines:
                     self._work_queue.put(("log", line))
 
-                self._work_queue.put(("status", "Single run finished."))
-                self._work_queue.put(("done", f"Saved plot:\n{plot_path}"))
+                self._work_queue.put(("status", f"{solver_name} finished."))
+                self._work_queue.put(("done", f"{solver_name} plot saved:\n{plot_path}"))
             except Exception as exc:
                 self._work_queue.put(("log", traceback.format_exc()))
                 self._work_queue.put(("status", "Error."))
@@ -439,10 +740,11 @@ class SatControlApp(ttk.Frame):
 
     def _on_run_batch(self) -> None:
         try:
-            # We still read restart/iteration settings from the UI
+            algorithm_name = self.batch_algorithm.get().strip()
+            base_solver_seed = int(self.batch_solver_base_seed.get().strip())
             max_restarts = int(self.batch_max_restarts.get().strip())
         except ValueError as exc:
-            messagebox.showerror("Invalid input", "Max random restarts must be an integer.")
+            messagebox.showerror("Invalid input", "Solver base seed and max random restarts must be integers.")
             return
 
         max_iter_raw = self.batch_max_iter.get().strip()
@@ -457,6 +759,45 @@ class SatControlApp(ttk.Frame):
             if per_restart < 1:
                 messagebox.showerror("Invalid input", "Max iterations must be at least 1.")
                 return
+
+        try:
+            batch_initial_temperature = float(self.batch_initial_temperature.get().strip())
+            batch_cooling_rate = float(self.batch_cooling_rate.get().strip())
+            batch_min_temperature = float(self.batch_min_temperature.get().strip())
+            batch_tabu_tenure = int(self.batch_tabu_tenure.get().strip())
+        except ValueError:
+            messagebox.showerror(
+                "Invalid input",
+                "SA fields must be numeric and tabu tenure must be an integer.",
+            )
+            return
+
+        if batch_initial_temperature <= 0.0:
+            messagebox.showerror("Invalid input", "Initial temperature must be greater than 0.")
+            return
+        if batch_cooling_rate <= 0.0 or batch_cooling_rate >= 1.0:
+            messagebox.showerror("Invalid input", "Cooling rate must be between 0 and 1.")
+            return
+        if batch_min_temperature <= 0.0:
+            messagebox.showerror("Invalid input", "Minimum temperature must be greater than 0.")
+            return
+        if batch_min_temperature >= batch_initial_temperature:
+            messagebox.showerror(
+                "Invalid input",
+                "Minimum temperature must be less than initial temperature.",
+            )
+            return
+        if batch_tabu_tenure < 1:
+            messagebox.showerror("Invalid input", "Tabu tenure must be at least 1.")
+            return
+        if max_restarts < 1:
+            messagebox.showerror("Invalid input", "Max random restarts must be at least 1.")
+            return
+
+        algorithm_key = algorithm_name.lower().replace(" ", "_")
+        if algorithm_key not in ("hill_climbing", "simulated_annealing", "tabu_search"):
+            messagebox.showerror("Invalid input", f"Unsupported algorithm: {algorithm_name}")
+            return
 
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -477,8 +818,8 @@ class SatControlApp(ttk.Frame):
         self.batch_progress["maximum"] = max(len(instance_files), 1)
         self._batch_total_cells = len(instance_files)
         self._batch_completed = 0
-        self._set_status("Running batch on saved instances…")
-        self._append_log(f"--- Batch started ({len(instance_files)} instances) ---")
+        self._set_status(f"Running {algorithm_name} batch...")
+        self._append_log(f"--- Batch started with {algorithm_name} ({len(instance_files)} instances) ---")
 
         def worker() -> None:
             try:
@@ -516,17 +857,33 @@ class SatControlApp(ttk.Frame):
                         self._work_queue.put(("log", f"Running instance {file_path.name} ..."))
                         self._work_queue.put(("batch_file", file_path.name))
 
-                        # Determine iteration budget
-                        iter_budget = per_restart if per_restart is not None else max(400, 15 * n)
+                        max_iterations = per_restart if per_restart is not None else max(400, 15 * n)
+                        solver_seed = base_solver_seed + completed
 
-                        # Load formula and run solver
                         formula = load_instance_formula_from_file(str(file_path))
-                        result = hill_climb_with_random_restarts(
-                            formula,
-                            max_iterations_per_restart=iter_budget,
-                            max_random_restarts=max_restarts,
-                            random_seed=42 + completed,  # deterministic but varies across instances
-                        )
+                        if algorithm_key == "hill_climbing":
+                            result = hill_climb_with_random_restarts(
+                                formula,
+                                max_iterations_per_restart=max_iterations,
+                                max_random_restarts=max_restarts,
+                                random_seed=solver_seed,
+                            )
+                        elif algorithm_key == "simulated_annealing":
+                            result = simulated_annealing_search(
+                                formula,
+                                max_iterations=max_iterations,
+                                initial_temperature=batch_initial_temperature,
+                                cooling_rate=batch_cooling_rate,
+                                min_temperature=batch_min_temperature,
+                                random_seed=solver_seed,
+                            )
+                        else:
+                            result = tabu_search_solve(
+                                formula,
+                                max_iterations=max_iterations,
+                                tabu_tenure=batch_tabu_tenure,
+                                random_seed=solver_seed,
+                            )
 
                         self._work_queue.put(
                             (
@@ -549,6 +906,7 @@ class SatControlApp(ttk.Frame):
                         row = {
                             "source_file": str(file_path),
                             "instance_file": file_path.name,
+                            "algorithm": algorithm_name,
                             "n": n,
                             "m": m,
                             "ratio": round(ratio, 6),
@@ -579,7 +937,7 @@ class SatControlApp(ttk.Frame):
                                 satisfaction_rate=satisfaction_rate,
                                 iterations=result.iterations_used,
                                 runtime_seconds=result.runtime_seconds,
-                                random_seed=42 + completed,
+                                random_seed=solver_seed,
                                 restart_count=result.restart_count,
                                 best_assignment_repr=best_assignment_repr,
                             )
@@ -590,6 +948,7 @@ class SatControlApp(ttk.Frame):
                             {
                                 "source_file": str(file_path),
                                 "instance_file": file_path.name,
+                                "algorithm": algorithm_name,
                                 "n": n,
                                 "m": m,
                                 "ratio": round(ratio, 6),
@@ -608,12 +967,12 @@ class SatControlApp(ttk.Frame):
                         completed += 1
                         self._work_queue.put(("batch_progress", (completed, len(instance_files))))
 
-                # Write CSV summary
-                output_csv = RESULTS_DIR / "batch_results.csv"
+                output_csv = RESULTS_DIR / f"batch_results_{algorithm_key}.csv"
                 with output_csv.open("w", newline="", encoding="utf-8") as csv_file:
                     fieldnames = [
                         "source_file",
                         "instance_file",
+                        "algorithm",
                         "n",
                         "m",
                         "ratio",
@@ -634,15 +993,30 @@ class SatControlApp(ttk.Frame):
 
                 self._work_queue.put(("log", f"CSV: {output_csv}"))
 
-                # Save a runtime plot so users get an image artifact for the batch run.
                 if runtime_records:
-                    batch_plot_path = PLOTS_DIR / "batch_runtime_vs_num_variables.png"
+                    batch_plot_path = PLOTS_DIR / f"batch_runtime_vs_num_variables_{algorithm_key}.png"
                     plot_runtime_vs_num_variables(
                         runtime_records,
                         output_path=batch_plot_path,
-                        title="Hill climbing runtime vs. n (batch instances)",
+                        title=f"{algorithm_name} runtime vs. n (batch instances)",
                     )
                     self._work_queue.put(("log", f"Plot: {batch_plot_path}"))
+
+                    satisfied_plot_path = PLOTS_DIR / f"batch_satisfied_vs_num_variables_{algorithm_key}.png"
+                    plot_satisfied_clauses_vs_num_variables(
+                        runtime_records,
+                        output_path=satisfied_plot_path,
+                        title=f"{algorithm_name} satisfied clauses vs. n (batch instances)",
+                    )
+                    self._work_queue.put(("log", f"Plot: {satisfied_plot_path}"))
+
+                    rate_plot_path = PLOTS_DIR / f"batch_satisfaction_rate_vs_num_variables_{algorithm_key}.png"
+                    plot_satisfaction_rate_vs_num_variables(
+                        runtime_records,
+                        output_path=rate_plot_path,
+                        title=f"{algorithm_name} satisfaction rate vs. n (batch instances)",
+                    )
+                    self._work_queue.put(("log", f"Plot: {rate_plot_path}"))
                 self._work_queue.put(("status", "Batch finished."))
                 self._work_queue.put(("done", f"Saved {len(results_rows)} results to:\n{output_csv}"))
             except Exception as exc:

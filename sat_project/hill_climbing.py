@@ -1,9 +1,10 @@
 """
-Hill climbing local search for Max-SAT style optimization on 3-CNF.
+Hill climbing solver for 3-SAT / Max-SAT style search.
 
-Stochastic hill climbing with optional random restarts mitigates local optima:
-when no single-variable flip improves the merit, a new random assignment can
-escape plateaus and suboptimal basins.
+The idea is simple:
+- Start from a random assignment
+- Keep flipping one variable if it improves the score
+- If stuck, restart from a new random assignment
 """
 
 from __future__ import annotations
@@ -20,41 +21,35 @@ from utils import CNFFormula, TruthAssignment
 
 @dataclass(frozen=True)
 class HillClimbingResult:
-    """Outcome of running hill climbing (with optional restarts) on one formula."""
+    """Final result and run stats for one hill-climbing solve."""
 
     best_assignment: Tuple[bool, ...]
-    """Best truth assignment found (immutable tuple for safety)."""
+    """Best assignment we found (stored as tuple so it cannot be mutated later)."""
 
     best_merit: int
-    """Number of satisfied clauses under best_assignment."""
+    """How many clauses are satisfied by best_assignment."""
 
     total_clauses: int
-    """m — for comparing best_merit to full satisfaction."""
+    """Total number of clauses in the formula."""
 
     fully_satisfied: bool
-    """True iff best_merit equals total_clauses."""
+    """True when all clauses are satisfied."""
 
     iterations_used: int
-    """Total hill-climbing iterations (neighbor sweeps) across all restarts."""
+    """Total improving moves across all restarts."""
 
     restart_count: int
-    """How many random restarts were actually started (including the first)."""
+    """How many starts were attempted (first run counts as one)."""
 
     runtime_seconds: float
-    """Wall-clock search time using ``time.perf_counter``."""
+    """Wall-clock runtime in seconds."""
 
     merit_history: Tuple[int, ...]
-    """
-    After each recorded step, the global best merit seen so far.
-
-    The first entry is the merit of the initial random assignment before any
-    neighbor move. Later entries include updates after each improving move
-    cycle and after each new restart's initial evaluation.
-    """
+    """Best-so-far merit after each recorded step (used for convergence plots)."""
 
 
 def _random_truth_assignment(num_variables: int, rng: random.Random) -> TruthAssignment:
-    """Create a uniformly random truth assignment."""
+    """Build a random True/False assignment for all variables."""
     return [rng.choice((False, True)) for _ in range(num_variables)]
 
 
@@ -64,7 +59,7 @@ def _record_global_best(
     global_best_merit: int,
     global_best_assignment: Optional[TruthAssignment],
 ) -> Tuple[int, TruthAssignment]:
-    """Update stored global best if this assignment is strictly better."""
+    """Update the global best snapshot if the current assignment is better."""
     if merit > global_best_merit:
         return merit, copy(assignment)
     if global_best_assignment is None:
@@ -77,7 +72,7 @@ def _merit_after_flip(
     assignment: TruthAssignment,
     flip_variable_index: int,
 ) -> int:
-    """Compute merit if assignment[flip_variable_index] were toggled (mutates briefly, then restores)."""
+    """Try one flip, score it, then flip back to restore original state."""
     assignment[flip_variable_index] = not assignment[flip_variable_index]
     merit = compute_solution_merit(formula, assignment)
     assignment[flip_variable_index] = not assignment[flip_variable_index]
@@ -91,13 +86,10 @@ def _select_best_improving_neighbor(
     rng: random.Random,
 ) -> Optional[int]:
     """
-    Find variable indices whose flip strictly increases satisfied clause count.
-
-    If several flips achieve the same best improvement, one index is chosen
-    uniformly at random (stochastic tie-breaking adds diversity).
+    Pick one of the best improving one-bit moves.
 
     Returns:
-        Index to flip, or None if no strictly improving flip exists (local optimum).
+        Variable index to flip, or None if no improving move exists.
     """
     best_merit_after_flip = current_merit
     candidate_indices: List[int] = []
@@ -108,7 +100,7 @@ def _select_best_improving_neighbor(
             best_merit_after_flip = merit_if_flipped
             candidate_indices = [variable_index]
         elif merit_if_flipped == best_merit_after_flip and merit_if_flipped > current_merit:
-            # Tie among improving moves at the same uplift — keep all tied winners.
+            # Same improvement as current best: keep it as another candidate.
             candidate_indices.append(variable_index)
 
     if not candidate_indices:
@@ -125,26 +117,21 @@ def hill_climb_with_random_restarts(
     random_seed: Optional[int] = None,
 ) -> HillClimbingResult:
     """
-    Greedy hill climbing: repeatedly move to a best improving one-bit neighbor.
+    Run greedy hill climbing with optional random restarts.
 
-    Stops an inner climb when:
-        1. All clauses are satisfied, or
-        2. No improving neighbor exists (local optimum), or
-        3. max_iterations_per_restart inner iterations have been performed.
-
-    If random restarts are enabled (max_random_restarts > 1), starts a new
-    random assignment when the inner climb ends without full satisfaction,
-    until global cap on restarts or a satisfying assignment is found.
+    Each restart does:
+    - Start from a random assignment
+    - Repeatedly choose a best improving flip
+    - Stop when solved, stuck, or iteration budget is reached
 
     Args:
-        formula: The 3-CNF instance.
-        max_iterations_per_restart: Maximum neighbor-sweep cycles per restart.
-        max_random_restarts: Number of independent random starting points
-            (each executes a full inner climb until local stop).
-        random_seed: Seed for reproducibility of the search stochasticity.
+        formula: 3-CNF formula to optimize.
+        max_iterations_per_restart: Move limit per restart.
+        max_random_restarts: Number of random starting points.
+        random_seed: Optional seed for reproducible random choices.
 
     Returns:
-        HillClimbingResult with best assignment found and diagnostic traces.
+        Best solution found plus metadata (runtime, iterations, history, ...).
     """
     if max_iterations_per_restart < 1:
         raise ValueError("max_iterations_per_restart must be at least 1.")
