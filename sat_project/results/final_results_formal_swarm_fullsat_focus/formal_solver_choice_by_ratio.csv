@@ -1,0 +1,4 @@
+mean_satisfaction_rate,mean_runtime_seconds,mean_unsatisfied_clauses,full_satisfaction_rate,full_satisfaction_count,run_count,best_satisfaction_rate,worst_satisfaction_rate,worst_runtime_seconds,algorithm_name,ratio
+0.9999333333333333,7.21744119002251,0.1,0.9,9,10,1.0,0.9993333333333333,25.62105459999293,Binary Swarm (BSGO),3.0
+0.9940387596899225,13.704627470020204,4.9,0.1,1,10,1.0,0.9906976744186047,36.11243269999977,Binary Swarm (BSGO),4.3
+0.9855555555555555,18.037441190006213,17.9,0.0,0,10,0.9866666666666667,0.9833333333333333,54.90156639995985,Binary Swarm (BSGO),6.0

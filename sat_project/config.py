@@ -207,3 +207,40 @@ def memetic_ga_sa_enhanced_defaults(n: int) -> Dict[str, Any]:
         }
     )
     return config
+
+
+def binary_swarm_defaults(n: int) -> Dict[str, Any]:
+    return {
+        "population_size": 64,
+        "max_iterations": max(240, 2 * n),
+        "w_inertia_start": 0.9,
+        "w_inertia_end": 0.4,
+        "c_cognitive": 1.35,
+        "c_social": 2.05,
+        "velocity_clamp": 4.0,
+        "local_search_every": 10,
+        "local_search_top_k": 2,
+        "stagnation_limit": 35,
+        "max_restarts": 2,
+        "annealing_temperature": 2.2,
+        "annealing_cooling": 0.995,
+        "annealing_trials": 3,
+        "sa_refine_iterations": min(240, max(80, 2 * n)),
+        "reheat_multiplier": 1.5,
+        "diversify_fraction": 0.3,
+        "refine_focus_probability": 0.85,
+        "refine_walksat_steps": max(40, n // 6),
+        "refine_walksat_noise_probability": 0.12,
+        "intensification_threshold": 0.99,
+        "intensify_local_search_every": 2,
+        "intensify_top_k": 3,
+        "intensify_sa_scale": 2.0,
+        "finish_attempts": 6,
+        "finish_perturbation": max(2, n // 25),
+        "finish_walksat_steps": max(120, int(0.6 * n)),
+        "finish_walksat_noise_probability": 0.12,
+        "finish_anneal_trials": 18,
+        "finish_temperature_scale": 0.4,
+        "finish_with_enhanced_sa": True,
+        "finish_sa_max_iterations": min(1800, 10 * n),
+    }

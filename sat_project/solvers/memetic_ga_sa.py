@@ -373,6 +373,11 @@ class MemeticGASASolver(BaseSolver):
         hardcase_multi_run_attempts = int(config.get("hardcase_multi_run_attempts", 2))
         hardcase_generation_scale = float(config.get("hardcase_generation_scale", 1.2))
         hardcase_sa_scale = float(config.get("hardcase_sa_scale", 1.25))
+        finish_with_enhanced_sa = bool(config.get("finish_with_enhanced_sa", False))
+        finish_sa_max_iterations = int(config.get("finish_sa_max_iterations", min(2000, 10 * n)))
+        finish_sa_restart_count = int(config.get("finish_sa_restart_count", 1))
+        finish_sa_attempts = int(config.get("finish_sa_attempts", 1))
+        finish_sa_perturbation = int(config.get("finish_sa_perturbation", max(2, n // 25)))
         lamarckian = bool(config.get("lamarckian", True))
         random_seed: Optional[int] = config.get("random_seed", None)
 
@@ -446,6 +451,14 @@ class MemeticGASASolver(BaseSolver):
             raise ValueError("hardcase_generation_scale must be >= 1.0.")
         if hardcase_sa_scale < 1.0:
             raise ValueError("hardcase_sa_scale must be >= 1.0.")
+        if finish_sa_max_iterations < 0:
+            raise ValueError("finish_sa_max_iterations must be at least 0.")
+        if finish_sa_restart_count < 1:
+            raise ValueError("finish_sa_restart_count must be at least 1.")
+        if finish_sa_attempts < 1:
+            raise ValueError("finish_sa_attempts must be at least 1.")
+        if finish_sa_perturbation < 0:
+            raise ValueError("finish_sa_perturbation must be at least 0.")
 
         rng_seed = 0 if random_seed is None else int(random_seed)
         start_time = time.perf_counter()
@@ -742,6 +755,38 @@ class MemeticGASASolver(BaseSolver):
         else:
             combined_best_history[0] = max(0, combined_best_history[1])
 
+        finish_sa_used = False
+        if (
+            m > 0
+            and global_best_merit < m
+            and finish_with_enhanced_sa
+            and finish_sa_max_iterations > 0
+        ):
+            for attempt in range(max(1, finish_sa_attempts)):
+                seed_assignment = list(global_best_assignment)
+                if attempt > 0 and finish_sa_perturbation > 0 and n > 0:
+                    flips = max(1, min(n, finish_sa_perturbation))
+                    for variable_index in random.Random(rng_seed + 77 + attempt).sample(range(n), flips):
+                        seed_assignment[variable_index] = not seed_assignment[variable_index]
+                sa_result = simulated_annealing_search(
+                    formula,
+                    mode="enhanced",
+                    max_iterations=finish_sa_max_iterations,
+                    random_seed=rng_seed + 900_001 + attempt * 11_003,
+                    restart_count=finish_sa_restart_count,
+                    elite_restart_transfer=True,
+                    elite_restart_perturbation=max(2, n // 30),
+                    initial_assignment=seed_assignment,
+                )
+                finish_sa_used = True
+                if int(sa_result.best_merit) > global_best_merit:
+                    global_best_merit = int(sa_result.best_merit)
+                    global_best_assignment = list(sa_result.best_assignment)
+                    combined_best_history.append(global_best_merit)
+                    combined_runtime_history.append(time.perf_counter() - start_time)
+                if global_best_merit >= m:
+                    break
+
         return normalize_result(
             algorithm_name=self.algorithm_name,
             assignment=global_best_assignment,
@@ -788,6 +833,12 @@ class MemeticGASASolver(BaseSolver):
                 "hardcase_multi_run_attempts": hardcase_multi_run_attempts,
                 "hardcase_generation_scale": hardcase_generation_scale,
                 "hardcase_sa_scale": hardcase_sa_scale,
+                "finish_with_enhanced_sa": finish_with_enhanced_sa,
+                "finish_sa_max_iterations": finish_sa_max_iterations,
+                "finish_sa_restart_count": finish_sa_restart_count,
+                "finish_sa_attempts": finish_sa_attempts,
+                "finish_sa_perturbation": finish_sa_perturbation,
+                "finish_sa_used": finish_sa_used,
                 "attempts_used": attempts_used,
                 "multi_run_triggered": multi_run_triggered,
                 "refinement_calls": total_refinement_calls,

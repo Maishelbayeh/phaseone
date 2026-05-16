@@ -165,6 +165,9 @@ class GeneticAlgorithmSolver(BaseSolver):
         finish_annealing_trials = int(config.get("finish_annealing_trials", 12))
         finish_with_enhanced_sa = bool(config.get("finish_with_enhanced_sa", False))
         finish_sa_max_iterations = int(config.get("finish_sa_max_iterations", min(1500, 8 * formula.num_variables)))
+        finish_sa_restart_count = int(config.get("finish_sa_restart_count", 1))
+        finish_sa_attempts = int(config.get("finish_sa_attempts", 1))
+        finish_sa_perturbation = int(config.get("finish_sa_perturbation", finish_perturbation))
 
         if population_size < 4:
             raise ValueError("population_size must be at least 4.")
@@ -232,6 +235,12 @@ class GeneticAlgorithmSolver(BaseSolver):
             raise ValueError("finish_annealing_trials must be at least 0.")
         if finish_sa_max_iterations < 0:
             raise ValueError("finish_sa_max_iterations must be at least 0.")
+        if finish_sa_restart_count < 1:
+            raise ValueError("finish_sa_restart_count must be at least 1.")
+        if finish_sa_attempts < 1:
+            raise ValueError("finish_sa_attempts must be at least 1.")
+        if finish_sa_perturbation < 0:
+            raise ValueError("finish_sa_perturbation must be at least 0.")
 
         rng = random.Random(random_seed)
         n = formula.num_variables
@@ -444,21 +453,30 @@ class GeneticAlgorithmSolver(BaseSolver):
             and finish_with_enhanced_sa
             and finish_sa_max_iterations > 0
         ):
-            sa_result = simulated_annealing_search(
-                formula,
-                mode="enhanced",
-                max_iterations=finish_sa_max_iterations,
-                random_seed=rng.randrange(1, 1_000_000_000),
-                restart_count=1,
-                elite_restart_transfer=False,
-                initial_assignment=best_assignment,
-            )
-            finish_sa_used = True
-            if int(sa_result.best_merit) > best_fitness:
-                best_fitness = int(sa_result.best_merit)
-                best_assignment = list(sa_result.best_assignment)
-                best_history.append(best_fitness)
-                runtime_history.append(time.perf_counter() - start_time)
+            for attempt in range(max(1, finish_sa_attempts)):
+                seed_assignment = list(best_assignment)
+                if attempt > 0 and finish_sa_perturbation > 0 and n > 0:
+                    flips = max(1, min(n, finish_sa_perturbation))
+                    for variable_index in rng.sample(range(n), flips):
+                        seed_assignment[variable_index] = not seed_assignment[variable_index]
+                sa_result = simulated_annealing_search(
+                    formula,
+                    mode="enhanced",
+                    max_iterations=finish_sa_max_iterations,
+                    random_seed=rng.randrange(1, 1_000_000_000),
+                    restart_count=finish_sa_restart_count,
+                    elite_restart_transfer=True,
+                    elite_restart_perturbation=max(2, n // 30),
+                    initial_assignment=seed_assignment,
+                )
+                finish_sa_used = True
+                if int(sa_result.best_merit) > best_fitness:
+                    best_fitness = int(sa_result.best_merit)
+                    best_assignment = list(sa_result.best_assignment)
+                    best_history.append(best_fitness)
+                    runtime_history.append(time.perf_counter() - start_time)
+                if best_fitness >= m:
+                    break
 
         return normalize_result(
             algorithm_name=self.algorithm_name,
@@ -503,6 +521,9 @@ class GeneticAlgorithmSolver(BaseSolver):
                 "finish_annealing_trials": finish_annealing_trials,
                 "finish_with_enhanced_sa": finish_with_enhanced_sa,
                 "finish_sa_max_iterations": finish_sa_max_iterations,
+                "finish_sa_restart_count": finish_sa_restart_count,
+                "finish_sa_attempts": finish_sa_attempts,
+                "finish_sa_perturbation": finish_sa_perturbation,
                 "finish_sa_used": finish_sa_used,
                 "random_seed": random_seed,
                 "method": "ga_with_annealed_refinement",

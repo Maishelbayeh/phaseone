@@ -12,6 +12,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Sequence
 from config import (
     FORMAL_COMPARE_PLOTS_DIR,
     FORMAL_COMPARE_RESULTS_DIR,
+    binary_swarm_defaults,
     genetic_algorithm_defaults,
     enhanced_sa_defaults,
     memetic_ga_sa_enhanced_defaults,
@@ -136,6 +137,7 @@ def _formal_solver_configs(n: int, *, memetic_speed_mode: str) -> List[tuple[str
         ("simulated_annealing", enhanced_sa_defaults(n)),
         ("genetic_algorithm", _formal_ga_defaults(n, speed_mode=memetic_speed_mode)),
         ("memetic_ga_sa", _formal_memetic_defaults(n, speed_mode=memetic_speed_mode)),
+        ("binary_swarm_solver", binary_swarm_defaults(n)),
     ]
 
 

@@ -172,6 +172,65 @@ def _refine_assignment(
     return state.assignment, state.merit
 
 
+def _local_search_flip(
+    formula: CNFFormula, assignment: TruthAssignment, rng: random.Random
+) -> Tuple[TruthAssignment, int]:
+    current_merit = compute_solution_merit(formula, assignment)
+    best_merit = current_merit
+    best_index = -1
+    indices = list(range(formula.num_variables))
+    rng.shuffle(indices)
+    for index in indices:
+        assignment[index] = not assignment[index]
+        candidate_merit = compute_solution_merit(formula, assignment)
+        if candidate_merit > best_merit:
+            best_merit = candidate_merit
+            best_index = index
+        assignment[index] = not assignment[index]
+    if best_index >= 0:
+        assignment[best_index] = not assignment[best_index]
+    return assignment, best_merit
+
+
+def _bounded_simulated_annealing_refine(
+    formula: CNFFormula,
+    start_assignment: TruthAssignment,
+    start_merit: int,
+    *,
+    max_iterations: int,
+    initial_temperature: float,
+    cooling_rate: float,
+    max_no_improve: Optional[int] = None,
+    rng: random.Random,
+) -> Tuple[TruthAssignment, int]:
+    cache = FormulaCache.build(formula)
+    state = AssignmentState.from_assignment(cache, start_assignment)
+    state.merit = start_merit
+    best_assignment = copy(state.assignment)
+    best_merit = int(state.merit)
+    temperature = float(initial_temperature)
+    no_improve_steps = 0
+    for _ in range(max(1, max_iterations)):
+        variable_index = rng.randrange(formula.num_variables)
+        delta, _, _ = state.flip_stats(variable_index)
+        if _accept_with_temperature(delta, temperature, rng):
+            state.apply_flip(variable_index)
+            if state.merit > best_merit:
+                best_merit = int(state.merit)
+                best_assignment = copy(state.assignment)
+                no_improve_steps = 0
+            else:
+                no_improve_steps += 1
+        else:
+            no_improve_steps += 1
+        if best_merit >= formula.num_clauses and formula.num_clauses > 0:
+            break
+        if max_no_improve is not None and no_improve_steps >= max_no_improve:
+            break
+        temperature = max(0.05, temperature * cooling_rate)
+    return best_assignment, best_merit
+
+
 def _perturb_assignment(
     assignment: TruthAssignment, *, flip_count: int, rng: random.Random
 ) -> TruthAssignment:
@@ -226,6 +285,9 @@ class BinarySwarmSolver(BaseSolver):
         finish_temperature_scale = float(config.get("finish_temperature_scale", 0.4))
         finish_with_enhanced_sa = bool(config.get("finish_with_enhanced_sa", True))
         finish_sa_max_iterations = int(config.get("finish_sa_max_iterations", min(1800, 10 * n)))
+        finish_sa_restart_count = int(config.get("finish_sa_restart_count", 1))
+        finish_sa_attempts = int(config.get("finish_sa_attempts", 1))
+        finish_sa_perturbation = int(config.get("finish_sa_perturbation", finish_perturbation))
         random_seed: Optional[int] = config.get("random_seed", None)
 
         if population_size < 2:
@@ -290,6 +352,12 @@ class BinarySwarmSolver(BaseSolver):
             raise ValueError("finish_temperature_scale must be > 0.")
         if finish_sa_max_iterations < 0:
             raise ValueError("finish_sa_max_iterations must be at least 0.")
+        if finish_sa_restart_count < 1:
+            raise ValueError("finish_sa_restart_count must be at least 1.")
+        if finish_sa_attempts < 1:
+            raise ValueError("finish_sa_attempts must be at least 1.")
+        if finish_sa_perturbation < 0:
+            raise ValueError("finish_sa_perturbation must be at least 0.")
 
         rng = random.Random(random_seed)
         start_time = time.perf_counter()
@@ -534,20 +602,31 @@ class BinarySwarmSolver(BaseSolver):
             and finish_with_enhanced_sa
             and finish_sa_max_iterations > 0
         ):
-            sa_result = simulated_annealing_search(
-                formula,
-                mode="enhanced",
-                max_iterations=finish_sa_max_iterations,
-                random_seed=rng.randrange(1, 1_000_000_000),
-                restart_count=1,
-                elite_restart_transfer=False,
-                initial_assignment=global_best_assignment,
-            )
-            finish_sa_used = True
-            if int(sa_result.best_merit) > global_best_merit:
-                global_best_merit = int(sa_result.best_merit)
-                global_best_assignment = list(sa_result.best_assignment)
-                record()
+            for attempt in range(max(1, finish_sa_attempts)):
+                seed_assignment = list(global_best_assignment)
+                if attempt > 0 and finish_sa_perturbation > 0 and n > 0:
+                    seed_assignment = _perturb_assignment(
+                        seed_assignment,
+                        flip_count=finish_sa_perturbation,
+                        rng=rng,
+                    )
+                sa_result = simulated_annealing_search(
+                    formula,
+                    mode="enhanced",
+                    max_iterations=finish_sa_max_iterations,
+                    random_seed=rng.randrange(1, 1_000_000_000),
+                    restart_count=finish_sa_restart_count,
+                    elite_restart_transfer=True,
+                    elite_restart_perturbation=max(2, n // 30),
+                    initial_assignment=seed_assignment,
+                )
+                finish_sa_used = True
+                if int(sa_result.best_merit) > global_best_merit:
+                    global_best_merit = int(sa_result.best_merit)
+                    global_best_assignment = list(sa_result.best_assignment)
+                    record()
+                if global_best_merit >= m:
+                    break
 
         assert global_best_assignment is not None
         return normalize_result(
@@ -593,6 +672,9 @@ class BinarySwarmSolver(BaseSolver):
                 "finish_temperature_scale": finish_temperature_scale,
                 "finish_with_enhanced_sa": finish_with_enhanced_sa,
                 "finish_sa_max_iterations": finish_sa_max_iterations,
+                "finish_sa_restart_count": finish_sa_restart_count,
+                "finish_sa_attempts": finish_sa_attempts,
+                "finish_sa_perturbation": finish_sa_perturbation,
                 "finish_sa_used": finish_sa_used,
                 "restarts_used": restarts_used,
                 "random_seed": random_seed,
