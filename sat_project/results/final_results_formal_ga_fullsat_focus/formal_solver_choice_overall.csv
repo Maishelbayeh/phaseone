@@ -1,0 +1,2 @@
+mean_satisfaction_rate,mean_runtime_seconds,mean_unsatisfied_clauses,full_satisfaction_rate,full_satisfaction_count,run_count,best_satisfaction_rate,worst_satisfaction_rate,worst_runtime_seconds,algorithm_name
+0.9906187338501292,10.908031273346085,12.466666666666667,0.2,6,30,1.0,0.9706666666666667,30.088814900023863,Genetic Algorithm

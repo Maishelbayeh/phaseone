@@ -7,6 +7,8 @@ from copy import copy
 from typing import Any, List, Mapping, Optional, Tuple
 
 from evaluator import compute_solution_merit
+from sa_enhanced import AssignmentState, FormulaCache
+from simulated_annealing import simulated_annealing_search
 from utils import CNFFormula, TruthAssignment
 
 from .base_solver import BaseSolver, SolverResult, normalize_result
@@ -26,6 +28,95 @@ def _accept_with_temperature(delta: int, temperature: float, rng: random.Random)
     if temperature <= 1e-12:
         return False
     return rng.random() < math.exp(max(-60.0, delta / temperature))
+
+
+def _pick_unsatisfied_clause_index(
+    state: AssignmentState, rng: random.Random, *, max_attempts: int = 30
+) -> Optional[int]:
+    m = state.cache.formula.num_clauses
+    if m <= 0:
+        return None
+    for _ in range(max_attempts):
+        idx = rng.randrange(m)
+        if state.clause_true_counts[idx] == 0:
+            return idx
+    return None
+
+
+def _pick_clause_variable(state: AssignmentState, clause_index: int, rng: random.Random) -> int:
+    variables = list(state.cache.clause_variables[clause_index])
+    rng.shuffle(variables)
+    best_variable = variables[0]
+    best_score = -10**9
+    for variable in variables:
+        delta, _, break_count = state.flip_stats(variable)
+        score = delta * 1000 - break_count
+        if score > best_score:
+            best_score = score
+            best_variable = variable
+    return best_variable
+
+
+def _annealed_refine_state(
+    state: AssignmentState,
+    temperature: float,
+    rng: random.Random,
+    *,
+    trials: int,
+    unsatisfied_focus_probability: float,
+) -> int:
+    n = state.cache.formula.num_variables
+    for _ in range(max(1, trials)):
+        use_focus = rng.random() < unsatisfied_focus_probability
+        if use_focus:
+            clause_index = _pick_unsatisfied_clause_index(state, rng)
+            if clause_index is not None:
+                variable_index = _pick_clause_variable(state, clause_index, rng)
+            else:
+                variable_index = rng.randrange(n)
+        else:
+            variable_index = rng.randrange(n)
+        delta, _, _ = state.flip_stats(variable_index)
+        if _accept_with_temperature(delta, temperature, rng):
+            state.apply_flip(variable_index)
+    return state.merit
+
+
+def _walksat_refine_state(
+    state: AssignmentState,
+    rng: random.Random,
+    *,
+    steps: int,
+    noise_probability: float,
+) -> int:
+    if steps <= 0:
+        return state.merit
+    m = state.cache.formula.num_clauses
+    if m <= 0:
+        return state.merit
+    for _ in range(steps):
+        if state.merit >= m:
+            break
+        clause_index = _pick_unsatisfied_clause_index(state, rng)
+        if clause_index is None:
+            break
+        variables = list(state.cache.clause_variables[clause_index])
+        if not variables:
+            continue
+        if rng.random() < noise_probability:
+            state.apply_flip(rng.choice(variables))
+            continue
+        rng.shuffle(variables)
+        best_variable = variables[0]
+        best_score = -10**9
+        for variable in variables:
+            delta, _, break_count = state.flip_stats(variable)
+            score = delta * 1000 - break_count
+            if score > best_score:
+                best_score = score
+                best_variable = variable
+        state.apply_flip(best_variable)
+    return state.merit
 
 
 def _annealed_single_flip(
@@ -50,69 +141,35 @@ def _annealed_single_flip(
     return candidate, candidate_merit
 
 
-def _bounded_simulated_annealing_refine(
-    formula: CNFFormula,
+def _refine_assignment(
+    cache: FormulaCache,
     start_assignment: TruthAssignment,
     start_merit: int,
     *,
-    max_iterations: int,
-    initial_temperature: float,
-    cooling_rate: float,
-    max_no_improve: Optional[int] = None,
     rng: random.Random,
+    temperature: float,
+    anneal_trials: int,
+    focus_probability: float,
+    walksat_steps: int,
+    walksat_noise_probability: float,
 ) -> Tuple[TruthAssignment, int]:
-    current_assignment = copy(start_assignment)
-    current_merit = start_merit
-    best_assignment = copy(start_assignment)
-    best_merit = start_merit
-    temperature = initial_temperature
-    no_improve_steps = 0
-
-    for _ in range(max(1, max_iterations)):
-        bit_index = rng.randrange(formula.num_variables)
-        current_assignment[bit_index] = not current_assignment[bit_index]
-        neighbor_merit = compute_solution_merit(formula, current_assignment)
-        if _accept_with_temperature(neighbor_merit - current_merit, temperature, rng):
-            current_merit = neighbor_merit
-            if current_merit > best_merit:
-                best_merit = current_merit
-                best_assignment = copy(current_assignment)
-                no_improve_steps = 0
-            else:
-                no_improve_steps += 1
-        else:
-            current_assignment[bit_index] = not current_assignment[bit_index]
-            no_improve_steps += 1
-
-        if best_merit >= formula.num_clauses and formula.num_clauses > 0:
-            break
-        if max_no_improve is not None and no_improve_steps >= max_no_improve:
-            break
-        temperature = max(0.05, temperature * cooling_rate)
-
-    return best_assignment, best_merit
-
-
-def _local_search_flip(
-    formula: CNFFormula, assignment: TruthAssignment, rng: random.Random
-) -> Tuple[TruthAssignment, int]:
-    current_merit = compute_solution_merit(formula, assignment)
-    best_merit = current_merit
-    best_index = -1
-
-    indices = list(range(formula.num_variables))
-    rng.shuffle(indices)
-    for index in indices:
-        assignment[index] = not assignment[index]
-        candidate_merit = compute_solution_merit(formula, assignment)
-        if candidate_merit > best_merit:
-            best_merit = candidate_merit
-            best_index = index
-        assignment[index] = not assignment[index]
-
-    if best_index >= 0:
-        assignment[best_index] = not assignment[best_index]
-    return assignment, best_merit
+    state = AssignmentState.from_assignment(cache, start_assignment)
+    state.merit = start_merit
+    if walksat_steps > 0:
+        _walksat_refine_state(
+            state,
+            rng,
+            steps=walksat_steps,
+            noise_probability=walksat_noise_probability,
+        )
+    _annealed_refine_state(
+        state,
+        temperature,
+        rng,
+        trials=anneal_trials,
+        unsatisfied_focus_probability=focus_probability,
+    )
+    return state.assignment, state.merit
 
 
 def _perturb_assignment(
@@ -154,6 +211,21 @@ class BinarySwarmSolver(BaseSolver):
         sa_refine_iterations = int(config.get("sa_refine_iterations", min(240, max(80, 2 * n))))
         reheat_multiplier = float(config.get("reheat_multiplier", 1.5))
         diversify_fraction = float(config.get("diversify_fraction", 0.3))
+        refine_focus_probability = float(config.get("refine_focus_probability", 0.85))
+        refine_walksat_steps = int(config.get("refine_walksat_steps", max(40, n // 6)))
+        refine_walksat_noise_probability = float(config.get("refine_walksat_noise_probability", 0.12))
+        intensification_threshold = float(config.get("intensification_threshold", 0.99))
+        intensify_local_search_every = int(config.get("intensify_local_search_every", 2))
+        intensify_top_k = int(config.get("intensify_top_k", 3))
+        intensify_sa_scale = float(config.get("intensify_sa_scale", 2.0))
+        finish_attempts = int(config.get("finish_attempts", 6))
+        finish_perturbation = int(config.get("finish_perturbation", max(2, n // 25)))
+        finish_walksat_steps = int(config.get("finish_walksat_steps", max(120, int(0.6 * n))))
+        finish_walksat_noise_probability = float(config.get("finish_walksat_noise_probability", 0.12))
+        finish_anneal_trials = int(config.get("finish_anneal_trials", 18))
+        finish_temperature_scale = float(config.get("finish_temperature_scale", 0.4))
+        finish_with_enhanced_sa = bool(config.get("finish_with_enhanced_sa", True))
+        finish_sa_max_iterations = int(config.get("finish_sa_max_iterations", min(1800, 10 * n)))
         random_seed: Optional[int] = config.get("random_seed", None)
 
         if population_size < 2:
@@ -190,9 +262,38 @@ class BinarySwarmSolver(BaseSolver):
             raise ValueError("reheat_multiplier must be at least 1.")
         if not (0.0 < diversify_fraction < 1.0):
             raise ValueError("diversify_fraction must be in (0, 1).")
+        if not (0.0 <= refine_focus_probability <= 1.0):
+            raise ValueError("refine_focus_probability must be in [0, 1].")
+        if refine_walksat_steps < 0:
+            raise ValueError("refine_walksat_steps must be at least 0.")
+        if not (0.0 <= refine_walksat_noise_probability <= 1.0):
+            raise ValueError("refine_walksat_noise_probability must be in [0, 1].")
+        if not (0.0 <= intensification_threshold <= 1.0):
+            raise ValueError("intensification_threshold must be in [0, 1].")
+        if intensify_local_search_every < 1:
+            raise ValueError("intensify_local_search_every must be at least 1.")
+        if intensify_top_k < 1:
+            raise ValueError("intensify_top_k must be at least 1.")
+        if intensify_sa_scale <= 0.0:
+            raise ValueError("intensify_sa_scale must be > 0.")
+        if finish_attempts < 0:
+            raise ValueError("finish_attempts must be at least 0.")
+        if finish_perturbation < 0:
+            raise ValueError("finish_perturbation must be at least 0.")
+        if finish_walksat_steps < 0:
+            raise ValueError("finish_walksat_steps must be at least 0.")
+        if not (0.0 <= finish_walksat_noise_probability <= 1.0):
+            raise ValueError("finish_walksat_noise_probability must be in [0, 1].")
+        if finish_anneal_trials < 0:
+            raise ValueError("finish_anneal_trials must be at least 0.")
+        if finish_temperature_scale <= 0.0:
+            raise ValueError("finish_temperature_scale must be > 0.")
+        if finish_sa_max_iterations < 0:
+            raise ValueError("finish_sa_max_iterations must be at least 0.")
 
         rng = random.Random(random_seed)
         start_time = time.perf_counter()
+        cache = FormulaCache.build(formula)
 
         best_history: List[int] = []
         runtime_history: List[float] = []
@@ -244,6 +345,11 @@ class BinarySwarmSolver(BaseSolver):
                 progress = iteration_index / max(1, max_iterations - 1)
                 inertia = w_inertia_start + (w_inertia_end - w_inertia_start) * progress
                 social_best = global_best_assignment if global_best_assignment is not None else restart_global_best
+                is_intensifying = (
+                    m > 0
+                    and global_best_merit < m
+                    and (float(global_best_merit) / float(m)) >= intensification_threshold
+                )
 
                 for particle_index in range(population_size):
                     particle = population[particle_index]
@@ -285,26 +391,40 @@ class BinarySwarmSolver(BaseSolver):
                             global_best_merit = updated_merit
                             global_best_assignment = copy(restart_global_best)
 
-                if (iteration_index + 1) % local_search_every == 0:
+                if (iteration_index + 1) % (intensify_local_search_every if is_intensifying else local_search_every) == 0:
                     ranked_indices = sorted(
                         range(population_size), key=lambda index: fitness[index], reverse=True
                     )
-                    elite_indices = ranked_indices[: min(local_search_top_k, population_size)]
+                    elite_budget = intensify_top_k if is_intensifying else local_search_top_k
+                    elite_indices = ranked_indices[: min(elite_budget, population_size)]
                     for elite_rank, index in enumerate(elite_indices):
                         refined_assignment = copy(population[index])
                         refined_merit = fitness[index]
-                        if elite_rank == 0:
-                            refined_assignment, refined_merit = _local_search_flip(
-                                formula, refined_assignment, rng
-                            )
-                        refined_assignment, refined_merit = _bounded_simulated_annealing_refine(
-                            formula,
+                        effective_sa_trials = (
+                            int(round(annealing_trials * intensify_sa_scale))
+                            if is_intensifying
+                            else annealing_trials
+                        )
+                        effective_sa_iterations = (
+                            int(round(sa_refine_iterations * intensify_sa_scale))
+                            if is_intensifying
+                            else sa_refine_iterations
+                        )
+                        effective_walksat_steps = (
+                            int(round(refine_walksat_steps * intensify_sa_scale))
+                            if is_intensifying
+                            else refine_walksat_steps
+                        )
+                        refined_assignment, refined_merit = _refine_assignment(
+                            cache,
                             refined_assignment,
                             refined_merit,
-                            max_iterations=sa_refine_iterations,
-                            initial_temperature=max(0.5, temperature),
-                            cooling_rate=annealing_cooling,
                             rng=rng,
+                            temperature=max(0.5, temperature),
+                            anneal_trials=min(5 * n, max(1, effective_sa_trials + effective_sa_iterations)),
+                            focus_probability=refine_focus_probability,
+                            walksat_steps=effective_walksat_steps if elite_rank == 0 else max(0, effective_walksat_steps // 2),
+                            walksat_noise_probability=refine_walksat_noise_probability,
                         )
                         if refined_merit > fitness[index]:
                             population[index] = refined_assignment
@@ -379,6 +499,56 @@ class BinarySwarmSolver(BaseSolver):
             if global_best_merit >= m and m > 0:
                 break
 
+        finish_used = 0
+        finish_sa_used = False
+        if global_best_assignment is not None and m > 0 and global_best_merit < m and finish_attempts > 0:
+            finish_temperature = max(0.5, annealing_temperature * finish_temperature_scale)
+            for attempt in range(finish_attempts):
+                finish_used = attempt + 1
+                candidate = copy(global_best_assignment)
+                if finish_perturbation > 0 and n > 0:
+                    candidate = _perturb_assignment(candidate, flip_count=finish_perturbation, rng=rng)
+                candidate_merit = compute_solution_merit(formula, candidate)
+                candidate, candidate_merit = _refine_assignment(
+                    cache,
+                    candidate,
+                    candidate_merit,
+                    rng=rng,
+                    temperature=finish_temperature,
+                    anneal_trials=finish_anneal_trials,
+                    focus_probability=max(0.9, refine_focus_probability),
+                    walksat_steps=finish_walksat_steps,
+                    walksat_noise_probability=finish_walksat_noise_probability,
+                )
+                if candidate_merit > global_best_merit:
+                    global_best_merit = candidate_merit
+                    global_best_assignment = copy(candidate)
+                    record()
+                if global_best_merit >= m:
+                    break
+
+        if (
+            global_best_assignment is not None
+            and m > 0
+            and global_best_merit < m
+            and finish_with_enhanced_sa
+            and finish_sa_max_iterations > 0
+        ):
+            sa_result = simulated_annealing_search(
+                formula,
+                mode="enhanced",
+                max_iterations=finish_sa_max_iterations,
+                random_seed=rng.randrange(1, 1_000_000_000),
+                restart_count=1,
+                elite_restart_transfer=False,
+                initial_assignment=global_best_assignment,
+            )
+            finish_sa_used = True
+            if int(sa_result.best_merit) > global_best_merit:
+                global_best_merit = int(sa_result.best_merit)
+                global_best_assignment = list(sa_result.best_assignment)
+                record()
+
         assert global_best_assignment is not None
         return normalize_result(
             algorithm_name=self.algorithm_name,
@@ -407,6 +577,23 @@ class BinarySwarmSolver(BaseSolver):
                 "sa_refine_iterations": sa_refine_iterations,
                 "reheat_multiplier": reheat_multiplier,
                 "diversify_fraction": diversify_fraction,
+                "refine_focus_probability": refine_focus_probability,
+                "refine_walksat_steps": refine_walksat_steps,
+                "refine_walksat_noise_probability": refine_walksat_noise_probability,
+                "intensification_threshold": intensification_threshold,
+                "intensify_local_search_every": intensify_local_search_every,
+                "intensify_top_k": intensify_top_k,
+                "intensify_sa_scale": intensify_sa_scale,
+                "finish_attempts": finish_attempts,
+                "finish_used": finish_used,
+                "finish_perturbation": finish_perturbation,
+                "finish_walksat_steps": finish_walksat_steps,
+                "finish_walksat_noise_probability": finish_walksat_noise_probability,
+                "finish_anneal_trials": finish_anneal_trials,
+                "finish_temperature_scale": finish_temperature_scale,
+                "finish_with_enhanced_sa": finish_with_enhanced_sa,
+                "finish_sa_max_iterations": finish_sa_max_iterations,
+                "finish_sa_used": finish_sa_used,
                 "restarts_used": restarts_used,
                 "random_seed": random_seed,
                 "method": "binary_pso_adaptive_guided",

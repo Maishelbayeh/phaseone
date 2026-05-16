@@ -20,3 +20,12 @@ instance_name,n,ratio,m,solver_key,algorithm_name,run_id,random_seed,best_satisf
 3sat_n200_r3.json,200,3.0,600,simulated_annealing,Simulated Annealing,1,20151542,600,600,1.0,0,0.005454299971461296,38,True
 3sat_n200_r3.json,200,3.0,600,genetic_algorithm,Genetic Algorithm,1,20159461,598,600,0.9966666666666667,2,14.332434899988584,300,False
 3sat_n200_r4.3.json,200,4.3,860,simulated_annealing,Simulated Annealing,1,20216932,858,860,0.9976744186046511,2,1.9995376999722794,7415,False
+3sat_n200_r4.3.json,200,4.3,860,genetic_algorithm,Genetic Algorithm,1,20224851,855,860,0.9941860465116279,5,17.34810879989527,300,False
+3sat_n200_r6.json,200,6.0,1200,simulated_annealing,Simulated Annealing,1,20302442,1182,1200,0.985,18,2.2886655000038445,6686,False
+3sat_n200_r6.json,200,6.0,1200,genetic_algorithm,Genetic Algorithm,1,20310361,1173,1200,0.9775,27,31.436790400068276,300,False
+3sat_n500_r3.json,500,3.0,1500,simulated_annealing,Simulated Annealing,1,50152442,1500,1500,1.0,0,0.212464899988845,405,True
+3sat_n500_r3.json,500,3.0,1500,genetic_algorithm,Genetic Algorithm,1,50160361,1494,1500,0.996,6,30.724731600028463,300,False
+3sat_n500_r4.3.json,500,4.3,2150,simulated_annealing,Simulated Annealing,1,50217832,2136,2150,0.9934883720930232,14,4.484294299967587,8174,False
+3sat_n500_r4.3.json,500,4.3,2150,genetic_algorithm,Genetic Algorithm,1,50225751,2120,2150,0.986046511627907,30,28.905561799998395,300,False
+3sat_n500_r6.json,500,6.0,3000,simulated_annealing,Simulated Annealing,1,50303342,2947,3000,0.9823333333333333,53,4.39997560007032,7632,False
+3sat_n500_r6.json,500,6.0,3000,genetic_algorithm,Genetic Algorithm,1,50311261,2925,3000,0.975,75,34.955699300044216,300,False

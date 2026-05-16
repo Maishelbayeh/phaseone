@@ -1,0 +1,3 @@
+mean_satisfaction_rate,mean_runtime_seconds,mean_unsatisfied_clauses,full_satisfaction_rate,full_satisfaction_count,run_count,best_satisfaction_rate,worst_satisfaction_rate,worst_runtime_seconds,algorithm_name
+0.9894701981050819,14.240959079974951,12.8,0.13333333333333333,2,15,1.0,0.975,34.955699300044216,Genetic Algorithm
+0.993281309216193,1.2304938866756856,7.866666666666666,0.3333333333333333,5,15,1.0,0.9823333333333333,4.484294299967587,Simulated Annealing

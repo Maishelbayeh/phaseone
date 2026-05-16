@@ -8,6 +8,7 @@ from typing import Any, List, Mapping, Optional, Tuple
 
 from evaluator import compute_solution_merit
 from sa_enhanced import AssignmentState, FormulaCache
+from simulated_annealing import simulated_annealing_search
 from utils import CNFFormula, TruthAssignment
 
 from .base_solver import BaseSolver, SolverResult, normalize_result
@@ -140,6 +141,13 @@ class GeneticAlgorithmSolver(BaseSolver):
         annealing_unsatisfied_focus_probability = float(
             config.get("annealing_unsatisfied_focus_probability", 0.7)
         )
+        intensification_threshold = float(config.get("intensification_threshold", 0.99))
+        intensification_focus_probability = float(config.get("intensification_focus_probability", 0.9))
+        intensification_local_steps_multiplier = float(
+            config.get("intensification_local_steps_multiplier", 2.5)
+        )
+        intensification_noise_probability = float(config.get("intensification_noise_probability", 0.08))
+        intensification_temperature_scale = float(config.get("intensification_temperature_scale", 0.6))
         stagnation_limit = int(config.get("stagnation_limit", 24))
         reheat_multiplier = float(config.get("reheat_multiplier", 1.5))
         initialization_strategy = str(config.get("initialization_strategy", "polarity")).strip().lower()
@@ -147,6 +155,16 @@ class GeneticAlgorithmSolver(BaseSolver):
         multi_bit_mutation_probability = float(config.get("multi_bit_mutation_probability", 0.02))
         max_multi_bit_mutation_size = int(config.get("max_multi_bit_mutation_size", 3))
         stagnation_multi_bit_boost = float(config.get("stagnation_multi_bit_boost", 0.12))
+        finish_attempts = int(config.get("finish_attempts", 6))
+        finish_perturbation = int(config.get("finish_perturbation", max(2, formula.num_variables // 25)))
+        finish_local_search_steps = int(
+            config.get("finish_local_search_steps", max(80, int(0.5 * formula.num_variables)))
+        )
+        finish_noise_probability = float(config.get("finish_noise_probability", 0.12))
+        finish_temperature_scale = float(config.get("finish_temperature_scale", 0.4))
+        finish_annealing_trials = int(config.get("finish_annealing_trials", 12))
+        finish_with_enhanced_sa = bool(config.get("finish_with_enhanced_sa", False))
+        finish_sa_max_iterations = int(config.get("finish_sa_max_iterations", min(1500, 8 * formula.num_variables)))
 
         if population_size < 4:
             raise ValueError("population_size must be at least 4.")
@@ -176,6 +194,16 @@ class GeneticAlgorithmSolver(BaseSolver):
             raise ValueError("annealing_trials must be at least 1.")
         if not (0.0 <= annealing_unsatisfied_focus_probability <= 1.0):
             raise ValueError("annealing_unsatisfied_focus_probability must be in [0, 1].")
+        if not (0.0 <= intensification_threshold <= 1.0):
+            raise ValueError("intensification_threshold must be in [0, 1].")
+        if not (0.0 <= intensification_focus_probability <= 1.0):
+            raise ValueError("intensification_focus_probability must be in [0, 1].")
+        if intensification_local_steps_multiplier <= 0.0:
+            raise ValueError("intensification_local_steps_multiplier must be > 0.")
+        if not (0.0 <= intensification_noise_probability <= 1.0):
+            raise ValueError("intensification_noise_probability must be in [0, 1].")
+        if intensification_temperature_scale <= 0.0:
+            raise ValueError("intensification_temperature_scale must be > 0.")
         if stagnation_limit < 1:
             raise ValueError("stagnation_limit must be at least 1.")
         if reheat_multiplier < 1.0:
@@ -190,6 +218,20 @@ class GeneticAlgorithmSolver(BaseSolver):
             raise ValueError("max_multi_bit_mutation_size must be at least 1.")
         if stagnation_multi_bit_boost < 0.0:
             raise ValueError("stagnation_multi_bit_boost must be >= 0.")
+        if finish_attempts < 0:
+            raise ValueError("finish_attempts must be at least 0.")
+        if finish_perturbation < 0:
+            raise ValueError("finish_perturbation must be at least 0.")
+        if finish_local_search_steps < 0:
+            raise ValueError("finish_local_search_steps must be at least 0.")
+        if not (0.0 <= finish_noise_probability <= 1.0):
+            raise ValueError("finish_noise_probability must be in [0, 1].")
+        if finish_temperature_scale <= 0.0:
+            raise ValueError("finish_temperature_scale must be > 0.")
+        if finish_annealing_trials < 0:
+            raise ValueError("finish_annealing_trials must be at least 0.")
+        if finish_sa_max_iterations < 0:
+            raise ValueError("finish_sa_max_iterations must be at least 0.")
 
         rng = random.Random(random_seed)
         n = formula.num_variables
@@ -243,6 +285,30 @@ class GeneticAlgorithmSolver(BaseSolver):
         generations_used = 0
         for generation in range(max_generations):
             generations_used = generation + 1
+            is_intensifying = (
+                m > 0
+                and best_fitness < m
+                and (float(best_fitness) / float(m)) >= intensification_threshold
+            )
+            effective_temperature = (
+                max(0.05, temperature * intensification_temperature_scale)
+                if is_intensifying
+                else temperature
+            )
+            effective_anneal_focus = (
+                intensification_focus_probability
+                if is_intensifying
+                else annealing_unsatisfied_focus_probability
+            )
+            effective_local_steps = (
+                int(round(local_search_steps * intensification_local_steps_multiplier))
+                if is_intensifying
+                else local_search_steps
+            )
+            effective_local_noise = (
+                intensification_noise_probability if is_intensifying else local_search_noise_probability
+            )
+
             ranked_indices = sorted(range(population_size), key=lambda i: fitness[i], reverse=True)
             next_population: List[TruthAssignment] = []
             next_fitness: List[int] = []
@@ -251,20 +317,23 @@ class GeneticAlgorithmSolver(BaseSolver):
                 elite = copy(population[idx])
                 elite_fitness = fitness[idx]
                 elite_state = AssignmentState.from_assignment(cache, elite)
-                if elite_rank == 0 and (generation + 1) % local_search_every == 0:
+                if (
+                    (elite_rank == 0 and (generation + 1) % local_search_every == 0)
+                    or (is_intensifying and elite_rank < min(2, elite_count))
+                ):
                     _walksat_refine_state(
                         elite_state,
                         rng,
-                        steps=local_search_steps,
-                        noise_probability=local_search_noise_probability,
+                        steps=effective_local_steps,
+                        noise_probability=effective_local_noise,
                     )
                 else:
                     _annealed_refine_state(
                         elite_state,
-                        temperature,
+                        effective_temperature,
                         rng,
                         trials=annealing_trials,
-                        unsatisfied_focus_probability=annealing_unsatisfied_focus_probability,
+                        unsatisfied_focus_probability=effective_anneal_focus,
                     )
                 elite = elite_state.assignment
                 elite_fitness = elite_state.merit
@@ -296,10 +365,10 @@ class GeneticAlgorithmSolver(BaseSolver):
                         child_state.apply_flip(bit_idx)
                 _annealed_refine_state(
                     child_state,
-                    temperature,
+                    effective_temperature,
                     rng,
                     trials=annealing_trials,
-                    unsatisfied_focus_probability=annealing_unsatisfied_focus_probability,
+                    unsatisfied_focus_probability=effective_anneal_focus,
                 )
                 next_population.append(child_state.assignment)
                 next_fitness.append(child_state.merit)
@@ -336,6 +405,61 @@ class GeneticAlgorithmSolver(BaseSolver):
                 break
             temperature = max(0.05, temperature * annealing_cooling)
 
+        finish_used = 0
+        if m > 0 and best_fitness < m and finish_attempts > 0:
+            finish_temperature = max(0.05, annealing_temperature * finish_temperature_scale)
+            for attempt in range(finish_attempts):
+                finish_used = attempt + 1
+                state = AssignmentState.from_assignment(cache, best_assignment)
+                if finish_perturbation > 0 and n > 0:
+                    flips = max(1, min(n, finish_perturbation))
+                    for variable_index in rng.sample(range(n), flips):
+                        state.apply_flip(variable_index)
+                _walksat_refine_state(
+                    state,
+                    rng,
+                    steps=finish_local_search_steps,
+                    noise_probability=finish_noise_probability,
+                )
+                if finish_annealing_trials > 0 and state.merit < m:
+                    _annealed_refine_state(
+                        state,
+                        finish_temperature,
+                        rng,
+                        trials=finish_annealing_trials,
+                        unsatisfied_focus_probability=max(0.9, annealing_unsatisfied_focus_probability),
+                    )
+                if state.merit > best_fitness:
+                    best_fitness = state.merit
+                    best_assignment = copy(state.assignment)
+                    best_history.append(best_fitness)
+                    runtime_history.append(time.perf_counter() - start_time)
+                if best_fitness >= m:
+                    break
+
+        finish_sa_used = False
+        if (
+            m > 0
+            and best_fitness < m
+            and finish_with_enhanced_sa
+            and finish_sa_max_iterations > 0
+        ):
+            sa_result = simulated_annealing_search(
+                formula,
+                mode="enhanced",
+                max_iterations=finish_sa_max_iterations,
+                random_seed=rng.randrange(1, 1_000_000_000),
+                restart_count=1,
+                elite_restart_transfer=False,
+                initial_assignment=best_assignment,
+            )
+            finish_sa_used = True
+            if int(sa_result.best_merit) > best_fitness:
+                best_fitness = int(sa_result.best_merit)
+                best_assignment = list(sa_result.best_assignment)
+                best_history.append(best_fitness)
+                runtime_history.append(time.perf_counter() - start_time)
+
         return normalize_result(
             algorithm_name=self.algorithm_name,
             assignment=best_assignment,
@@ -358,6 +482,11 @@ class GeneticAlgorithmSolver(BaseSolver):
                 "annealing_cooling": annealing_cooling,
                 "annealing_trials": annealing_trials,
                 "annealing_unsatisfied_focus_probability": annealing_unsatisfied_focus_probability,
+                "intensification_threshold": intensification_threshold,
+                "intensification_focus_probability": intensification_focus_probability,
+                "intensification_local_steps_multiplier": intensification_local_steps_multiplier,
+                "intensification_noise_probability": intensification_noise_probability,
+                "intensification_temperature_scale": intensification_temperature_scale,
                 "stagnation_limit": stagnation_limit,
                 "reheat_multiplier": reheat_multiplier,
                 "initialization_strategy": initialization_strategy,
@@ -365,6 +494,16 @@ class GeneticAlgorithmSolver(BaseSolver):
                 "multi_bit_mutation_probability": multi_bit_mutation_probability,
                 "max_multi_bit_mutation_size": max_multi_bit_mutation_size,
                 "stagnation_multi_bit_boost": stagnation_multi_bit_boost,
+                "finish_attempts": finish_attempts,
+                "finish_used": finish_used,
+                "finish_perturbation": finish_perturbation,
+                "finish_local_search_steps": finish_local_search_steps,
+                "finish_noise_probability": finish_noise_probability,
+                "finish_temperature_scale": finish_temperature_scale,
+                "finish_annealing_trials": finish_annealing_trials,
+                "finish_with_enhanced_sa": finish_with_enhanced_sa,
+                "finish_sa_max_iterations": finish_sa_max_iterations,
+                "finish_sa_used": finish_sa_used,
                 "random_seed": random_seed,
                 "method": "ga_with_annealed_refinement",
             },
