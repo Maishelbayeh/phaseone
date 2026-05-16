@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from benchmark_formal_solver_choice import run_formal_solver_choice_benchmark
 from experiments import (
     run_experiment_grid,
     run_single_experiment,
@@ -17,8 +18,11 @@ from experiments import (
     save_records_json,
 )
 from hill_climbing import hill_climb_with_random_restarts
+from memetic_stress_test import run_memetic_stress_test
 from plotting import plot_convergence_history, plot_runtime_vs_num_variables
+from sa_stress_test import run_sa_stress_test
 from sat_generator import compute_clause_count_from_density, generate_random_3sat
+from sa_tuning import run_tuning
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -115,6 +119,84 @@ def build_argument_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Open the Tkinter control panel to edit parameters interactively.",
     )
+    parser.add_argument(
+        "--sa-compare",
+        action="store_true",
+        help="Run baseline vs enhanced simulated annealing tuning/comparison artifacts.",
+    )
+    parser.add_argument(
+        "--sa-trials",
+        type=int,
+        default=8,
+        help="Number of enhanced SA settings sampled when --sa-compare is used.",
+    )
+    parser.add_argument(
+        "--sa-matrix",
+        choices=("representative", "hard"),
+        default="representative",
+        help="Benchmark matrix used by --sa-compare.",
+    )
+    parser.add_argument(
+        "--sa-runs-per-instance",
+        type=int,
+        default=1,
+        help="Independent runs per instance for --sa-compare.",
+    )
+    parser.add_argument(
+        "--sa-stress-test",
+        action="store_true",
+        help="Run the large SA stress-test benchmark framework.",
+    )
+    parser.add_argument(
+        "--sa-stress-instances-per-cell",
+        type=int,
+        default=5,
+        help="Generated instances per (n, r) cell for --sa-stress-test.",
+    )
+    parser.add_argument(
+        "--sa-stress-runs-per-instance",
+        type=int,
+        default=5,
+        help="Independent solver runs per instance for --sa-stress-test.",
+    )
+    parser.add_argument(
+        "--sa-stress-baseline-only",
+        action="store_true",
+        help="When used with --sa-stress-test, skip enhanced SA and run baseline only.",
+    )
+    parser.add_argument(
+        "--memetic-stress-test",
+        action="store_true",
+        help="Run the large Memetic GA-SA stress-test benchmark framework.",
+    )
+    parser.add_argument(
+        "--memetic-stress-instances-per-cell",
+        type=int,
+        default=5,
+        help="Generated instances per (n, r) cell for --memetic-stress-test.",
+    )
+    parser.add_argument(
+        "--memetic-stress-runs-per-instance",
+        type=int,
+        default=5,
+        help="Independent solver runs per instance for --memetic-stress-test.",
+    )
+    parser.add_argument(
+        "--memetic-stress-classic-only",
+        action="store_true",
+        help="When used with --memetic-stress-test, skip enhanced-SA refinement and run classic Memetic GA-SA only.",
+    )
+    parser.add_argument(
+        "--formal-solver-choice",
+        action="store_true",
+        help="Compare enhanced SA, GA, and Memetic GA-SA on top-level data/instances files.",
+    )
+    parser.add_argument(
+        "--formal-runs-per-solver",
+        type=int,
+        default=1,
+        help="Independent runs per solver for --formal-solver-choice.",
+    )
     return parser
 
 
@@ -126,6 +208,44 @@ def main() -> None:
         import gui as gui_module
 
         gui_module.main()
+        return
+
+    if arguments.sa_compare:
+        run_tuning(
+            trials=max(1, arguments.sa_trials),
+            matrix_name=arguments.sa_matrix,
+            runs_per_instance=max(1, arguments.sa_runs_per_instance),
+            base_seed=42,
+        )
+        print("Saved enhanced SA comparison artifacts under results/comparison and results/final_results_sa_enhanced.")
+        return
+
+    if arguments.sa_stress_test:
+        run_sa_stress_test(
+            instances_per_cell=max(1, arguments.sa_stress_instances_per_cell),
+            solver_runs_per_instance=max(1, arguments.sa_stress_runs_per_instance),
+            include_enhanced=not arguments.sa_stress_baseline_only,
+            base_seed=42,
+        )
+        print("Saved SA stress-test artifacts under results/final_results_sa_stress.")
+        return
+
+    if arguments.memetic_stress_test:
+        run_memetic_stress_test(
+            instances_per_cell=max(1, arguments.memetic_stress_instances_per_cell),
+            solver_runs_per_instance=max(1, arguments.memetic_stress_runs_per_instance),
+            include_enhanced=not arguments.memetic_stress_classic_only,
+            base_seed=42,
+        )
+        print("Saved Memetic GA-SA stress-test artifacts under results/final_results_memetic_stress.")
+        return
+
+    if arguments.formal_solver_choice:
+        run_formal_solver_choice_benchmark(
+            runs_per_solver=max(1, arguments.formal_runs_per_solver),
+            base_seed=42,
+        )
+        print("Saved formal solver-choice comparison artifacts under results/final_results_formal_solver_choice.")
         return
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,845 @@
+{
+  "instances": [
+    "3sat_n50_r3.json",
+    "3sat_n100_r4.3.json",
+    "3sat_n100_r6.json"
+  ],
+  "seeds": [
+    101,
+    202
+  ],
+  "overall": [
+    {
+      "algorithm_name": "Simulated Annealing",
+      "mean_best_satisfied": 388,
+      "mean_satisfaction_rate": 0.9902325581395349,
+      "mean_runtime_seconds": 1.1273169332998805,
+      "mean_iterations_used": 2512.6666666666665,
+      "full_satisfy_count": 2,
+      "runs": 6
+    },
+    {
+      "algorithm_name": "Genetic Algorithm",
+      "mean_best_satisfied": 387,
+      "mean_satisfaction_rate": 0.9874031007751938,
+      "mean_runtime_seconds": 4.563203483334898,
+      "mean_iterations_used": 186.66666666666666,
+      "full_satisfy_count": 1,
+      "runs": 6
+    },
+    {
+      "algorithm_name": "Hill Climbing",
+      "mean_best_satisfied": 384.8333333333333,
+      "mean_satisfaction_rate": 0.9840762273901809,
+      "mean_runtime_seconds": 8.590517533322176,
+      "mean_iterations_used": 172.83333333333334,
+      "full_satisfy_count": 2,
+      "runs": 6
+    },
+    {
+      "algorithm_name": "Hybrid BSGO-GA",
+      "mean_best_satisfied": 385.3333333333333,
+      "mean_satisfaction_rate": 0.9840762273901809,
+      "mean_runtime_seconds": 17.1632578666904,
+      "mean_iterations_used": 173.33333333333334,
+      "full_satisfy_count": 1,
+      "runs": 6
+    },
+    {
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "mean_best_satisfied": 384.6666666666667,
+      "mean_satisfaction_rate": 0.9812984496124031,
+      "mean_runtime_seconds": 9.103265016688965,
+      "mean_iterations_used": 263.1666666666667,
+      "full_satisfy_count": 0,
+      "runs": 6
+    }
+  ],
+  "by_instance": {
+    "3sat_n50_r3.json": [
+      {
+        "algorithm_name": "Simulated Annealing",
+        "mean_best_satisfied": 150,
+        "max_best_satisfied": 150,
+        "mean_satisfaction_rate": 1.0,
+        "mean_runtime_seconds": 0.19589179992908612,
+        "mean_iterations_used": 1284,
+        "full_satisfy_count": 2
+      },
+      {
+        "algorithm_name": "Hill Climbing",
+        "mean_best_satisfied": 150,
+        "max_best_satisfied": 150,
+        "mean_satisfaction_rate": 1.0,
+        "mean_runtime_seconds": 0.6154494999791496,
+        "mean_iterations_used": 54.5,
+        "full_satisfy_count": 2
+      },
+      {
+        "algorithm_name": "Genetic Algorithm",
+        "mean_best_satisfied": 149.5,
+        "max_best_satisfied": 150,
+        "mean_satisfaction_rate": 0.9966666666666666,
+        "mean_runtime_seconds": 1.0093852499849163,
+        "mean_iterations_used": 120,
+        "full_satisfy_count": 1
+      },
+      {
+        "algorithm_name": "Hybrid BSGO-GA",
+        "mean_best_satisfied": 149.5,
+        "max_best_satisfied": 150,
+        "mean_satisfaction_rate": 0.9966666666666666,
+        "mean_runtime_seconds": 3.300378250016365,
+        "mean_iterations_used": 120,
+        "full_satisfy_count": 1
+      },
+      {
+        "algorithm_name": "Binary Swarm (BSGO)",
+        "mean_best_satisfied": 148.5,
+        "max_best_satisfied": 149,
+        "mean_satisfaction_rate": 0.99,
+        "mean_runtime_seconds": 2.445559250016231,
+        "mean_iterations_used": 209.5,
+        "full_satisfy_count": 0
+      }
+    ],
+    "3sat_n100_r4.3.json": [
+      {
+        "algorithm_name": "Simulated Annealing",
+        "mean_best_satisfied": 426,
+        "max_best_satisfied": 426,
+        "mean_satisfaction_rate": 0.9906976744186047,
+        "mean_runtime_seconds": 1.2386429999605753,
+        "mean_iterations_used": 3127,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Genetic Algorithm",
+        "mean_best_satisfied": 424.5,
+        "max_best_satisfied": 426,
+        "mean_satisfaction_rate": 0.9872093023255815,
+        "mean_runtime_seconds": 4.68378375004977,
+        "mean_iterations_used": 220,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Hill Climbing",
+        "mean_best_satisfied": 422,
+        "max_best_satisfied": 423,
+        "mean_satisfaction_rate": 0.9813953488372094,
+        "mean_runtime_seconds": 8.91274970001541,
+        "mean_iterations_used": 215.5,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Binary Swarm (BSGO)",
+        "mean_best_satisfied": 422,
+        "max_best_satisfied": 423,
+        "mean_satisfaction_rate": 0.9813953488372094,
+        "mean_runtime_seconds": 10.328005800023675,
+        "mean_iterations_used": 280,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Hybrid BSGO-GA",
+        "mean_best_satisfied": 422,
+        "max_best_satisfied": 424,
+        "mean_satisfaction_rate": 0.9813953488372094,
+        "mean_runtime_seconds": 20.54927380004665,
+        "mean_iterations_used": 200,
+        "full_satisfy_count": 0
+      }
+    ],
+    "3sat_n100_r6.json": [
+      {
+        "algorithm_name": "Simulated Annealing",
+        "mean_best_satisfied": 588,
+        "max_best_satisfied": 589,
+        "mean_satisfaction_rate": 0.98,
+        "mean_runtime_seconds": 1.94741600000998,
+        "mean_iterations_used": 3127,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Genetic Algorithm",
+        "mean_best_satisfied": 587,
+        "max_best_satisfied": 587,
+        "mean_satisfaction_rate": 0.9783333333333334,
+        "mean_runtime_seconds": 7.996441449970007,
+        "mean_iterations_used": 220,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Hybrid BSGO-GA",
+        "mean_best_satisfied": 584.5,
+        "max_best_satisfied": 586,
+        "mean_satisfaction_rate": 0.9741666666666666,
+        "mean_runtime_seconds": 27.64012155000819,
+        "mean_iterations_used": 200,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Binary Swarm (BSGO)",
+        "mean_best_satisfied": 583.5,
+        "max_best_satisfied": 587,
+        "mean_satisfaction_rate": 0.9725,
+        "mean_runtime_seconds": 14.53623000002699,
+        "mean_iterations_used": 300,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Hill Climbing",
+        "mean_best_satisfied": 582.5,
+        "max_best_satisfied": 583,
+        "mean_satisfaction_rate": 0.9708333333333333,
+        "mean_runtime_seconds": 16.243353399971966,
+        "mean_iterations_used": 248.5,
+        "full_satisfy_count": 0
+      }
+    ]
+  },
+  "per_run": [
+    {
+      "instance": "3sat_n50_r3.json",
+      "solver_key": "hill_climbing",
+      "algorithm_name": "Hill Climbing",
+      "seed": 101,
+      "best_satisfied": 150,
+      "total_clauses": 150,
+      "satisfaction_rate": 1.0,
+      "runtime_seconds": 0.647699199966155,
+      "iterations_used": 58,
+      "fully_satisfied": true,
+      "params": {
+        "max_iterations_per_restart": 500,
+        "max_random_restarts": 10,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n50_r3.json",
+      "solver_key": "hill_climbing",
+      "algorithm_name": "Hill Climbing",
+      "seed": 202,
+      "best_satisfied": 150,
+      "total_clauses": 150,
+      "satisfaction_rate": 1.0,
+      "runtime_seconds": 0.5831997999921441,
+      "iterations_used": 51,
+      "fully_satisfied": true,
+      "params": {
+        "max_iterations_per_restart": 500,
+        "max_random_restarts": 10,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n50_r3.json",
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "seed": 101,
+      "best_satisfied": 150,
+      "total_clauses": 150,
+      "satisfaction_rate": 1.0,
+      "runtime_seconds": 0.17330639995634556,
+      "iterations_used": 1207,
+      "fully_satisfied": true,
+      "params": {
+        "max_iterations": 3000,
+        "initial_temperature": 12.0,
+        "cooling_rate": 0.997,
+        "min_temperature": 0.001,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n50_r3.json",
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "seed": 202,
+      "best_satisfied": 150,
+      "total_clauses": 150,
+      "satisfaction_rate": 1.0,
+      "runtime_seconds": 0.21847719990182668,
+      "iterations_used": 1361,
+      "fully_satisfied": true,
+      "params": {
+        "max_iterations": 3000,
+        "initial_temperature": 12.0,
+        "cooling_rate": 0.997,
+        "min_temperature": 0.001,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n50_r3.json",
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "seed": 101,
+      "best_satisfied": 149,
+      "total_clauses": 150,
+      "satisfaction_rate": 0.9933333333333333,
+      "runtime_seconds": 1.8481308999471366,
+      "iterations_used": 220,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 56,
+        "max_generations": 220,
+        "crossover_rate": 0.88,
+        "mutation_rate": 0.04,
+        "elite_count": 2,
+        "crossover_mode": "two_point",
+        "tournament_size": 3,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n50_r3.json",
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "seed": 202,
+      "best_satisfied": 150,
+      "total_clauses": 150,
+      "satisfaction_rate": 1.0,
+      "runtime_seconds": 0.17063960002269596,
+      "iterations_used": 20,
+      "fully_satisfied": true,
+      "params": {
+        "population_size": 56,
+        "max_generations": 220,
+        "crossover_rate": 0.88,
+        "mutation_rate": 0.04,
+        "elite_count": 2,
+        "crossover_mode": "two_point",
+        "tournament_size": 3,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n50_r3.json",
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "seed": 101,
+      "best_satisfied": 148,
+      "total_clauses": 150,
+      "satisfaction_rate": 0.9866666666666667,
+      "runtime_seconds": 2.2023657000390813,
+      "iterations_used": 204,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 360,
+        "w_inertia": 0.72,
+        "c_parameter": 0.72,
+        "c_cognitive": 1.6,
+        "c_social": 1.8,
+        "local_search_every": 8,
+        "stagnation_limit": 45,
+        "max_restarts": 3,
+        "restarts_used": 4,
+        "random_seed": 101,
+        "method": "binary_pso_vshape"
+      }
+    },
+    {
+      "instance": "3sat_n50_r3.json",
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "seed": 202,
+      "best_satisfied": 149,
+      "total_clauses": 150,
+      "satisfaction_rate": 0.9933333333333333,
+      "runtime_seconds": 2.688752799993381,
+      "iterations_used": 215,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 360,
+        "w_inertia": 0.72,
+        "c_parameter": 0.72,
+        "c_cognitive": 1.6,
+        "c_social": 1.8,
+        "local_search_every": 8,
+        "stagnation_limit": 45,
+        "max_restarts": 3,
+        "restarts_used": 4,
+        "random_seed": 202,
+        "method": "binary_pso_vshape"
+      }
+    },
+    {
+      "instance": "3sat_n50_r3.json",
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "seed": 101,
+      "best_satisfied": 149,
+      "total_clauses": 150,
+      "satisfaction_rate": 0.9933333333333333,
+      "runtime_seconds": 5.440233899978921,
+      "iterations_used": 200,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 200,
+        "crossover_rate": 0.92,
+        "mutation_rate": 0.04,
+        "c_coefficient": 0.72,
+        "tournament_size": 3,
+        "stagnation_limit": 30,
+        "local_search_elite": true,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n50_r3.json",
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "seed": 202,
+      "best_satisfied": 150,
+      "total_clauses": 150,
+      "satisfaction_rate": 1.0,
+      "runtime_seconds": 1.1605226000538096,
+      "iterations_used": 40,
+      "fully_satisfied": true,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 200,
+        "crossover_rate": 0.92,
+        "mutation_rate": 0.04,
+        "c_coefficient": 0.72,
+        "tournament_size": 3,
+        "stagnation_limit": 30,
+        "local_search_elite": true,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "solver_key": "hill_climbing",
+      "algorithm_name": "Hill Climbing",
+      "seed": 101,
+      "best_satisfied": 423,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9837209302325581,
+      "runtime_seconds": 9.313616500003263,
+      "iterations_used": 213,
+      "fully_satisfied": false,
+      "params": {
+        "max_iterations_per_restart": 1000,
+        "max_random_restarts": 10,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "solver_key": "hill_climbing",
+      "algorithm_name": "Hill Climbing",
+      "seed": 202,
+      "best_satisfied": 421,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9790697674418605,
+      "runtime_seconds": 8.511882900027558,
+      "iterations_used": 218,
+      "fully_satisfied": false,
+      "params": {
+        "max_iterations_per_restart": 1000,
+        "max_random_restarts": 10,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "seed": 101,
+      "best_satisfied": 426,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9906976744186047,
+      "runtime_seconds": 1.2474577999673784,
+      "iterations_used": 3127,
+      "fully_satisfied": false,
+      "params": {
+        "max_iterations": 5000,
+        "initial_temperature": 12.0,
+        "cooling_rate": 0.997,
+        "min_temperature": 0.001,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "seed": 202,
+      "best_satisfied": 426,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9906976744186047,
+      "runtime_seconds": 1.2298281999537721,
+      "iterations_used": 3127,
+      "fully_satisfied": false,
+      "params": {
+        "max_iterations": 5000,
+        "initial_temperature": 12.0,
+        "cooling_rate": 0.997,
+        "min_temperature": 0.001,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "seed": 101,
+      "best_satisfied": 426,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9906976744186047,
+      "runtime_seconds": 4.5891840000404045,
+      "iterations_used": 220,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 56,
+        "max_generations": 220,
+        "crossover_rate": 0.88,
+        "mutation_rate": 0.02,
+        "elite_count": 2,
+        "crossover_mode": "two_point",
+        "tournament_size": 3,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "seed": 202,
+      "best_satisfied": 423,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9837209302325581,
+      "runtime_seconds": 4.778383500059135,
+      "iterations_used": 220,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 56,
+        "max_generations": 220,
+        "crossover_rate": 0.88,
+        "mutation_rate": 0.02,
+        "elite_count": 2,
+        "crossover_mode": "two_point",
+        "tournament_size": 3,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "seed": 101,
+      "best_satisfied": 423,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9837209302325581,
+      "runtime_seconds": 11.3261913000606,
+      "iterations_used": 300,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 360,
+        "w_inertia": 0.72,
+        "c_parameter": 0.72,
+        "c_cognitive": 1.6,
+        "c_social": 1.8,
+        "local_search_every": 8,
+        "stagnation_limit": 45,
+        "max_restarts": 3,
+        "restarts_used": 4,
+        "random_seed": 101,
+        "method": "binary_pso_vshape"
+      }
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "seed": 202,
+      "best_satisfied": 421,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9790697674418605,
+      "runtime_seconds": 9.32982029998675,
+      "iterations_used": 260,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 360,
+        "w_inertia": 0.72,
+        "c_parameter": 0.72,
+        "c_cognitive": 1.6,
+        "c_social": 1.8,
+        "local_search_every": 8,
+        "stagnation_limit": 45,
+        "max_restarts": 3,
+        "restarts_used": 4,
+        "random_seed": 202,
+        "method": "binary_pso_vshape"
+      }
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "seed": 101,
+      "best_satisfied": 424,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.986046511627907,
+      "runtime_seconds": 20.618762900005095,
+      "iterations_used": 200,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 200,
+        "crossover_rate": 0.92,
+        "mutation_rate": 0.02,
+        "c_coefficient": 0.72,
+        "tournament_size": 3,
+        "stagnation_limit": 30,
+        "local_search_elite": true,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "seed": 202,
+      "best_satisfied": 420,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9767441860465116,
+      "runtime_seconds": 20.479784700088203,
+      "iterations_used": 200,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 200,
+        "crossover_rate": 0.92,
+        "mutation_rate": 0.02,
+        "c_coefficient": 0.72,
+        "tournament_size": 3,
+        "stagnation_limit": 30,
+        "local_search_elite": true,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "solver_key": "hill_climbing",
+      "algorithm_name": "Hill Climbing",
+      "seed": 101,
+      "best_satisfied": 583,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9716666666666667,
+      "runtime_seconds": 15.537292000022717,
+      "iterations_used": 243,
+      "fully_satisfied": false,
+      "params": {
+        "max_iterations_per_restart": 1000,
+        "max_random_restarts": 10,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "solver_key": "hill_climbing",
+      "algorithm_name": "Hill Climbing",
+      "seed": 202,
+      "best_satisfied": 582,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.97,
+      "runtime_seconds": 16.949414799921215,
+      "iterations_used": 254,
+      "fully_satisfied": false,
+      "params": {
+        "max_iterations_per_restart": 1000,
+        "max_random_restarts": 10,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "seed": 101,
+      "best_satisfied": 589,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9816666666666667,
+      "runtime_seconds": 2.0562614999944344,
+      "iterations_used": 3127,
+      "fully_satisfied": false,
+      "params": {
+        "max_iterations": 5000,
+        "initial_temperature": 12.0,
+        "cooling_rate": 0.997,
+        "min_temperature": 0.001,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "seed": 202,
+      "best_satisfied": 587,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9783333333333334,
+      "runtime_seconds": 1.8385705000255257,
+      "iterations_used": 3127,
+      "fully_satisfied": false,
+      "params": {
+        "max_iterations": 5000,
+        "initial_temperature": 12.0,
+        "cooling_rate": 0.997,
+        "min_temperature": 0.001,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "seed": 101,
+      "best_satisfied": 587,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9783333333333334,
+      "runtime_seconds": 8.033448899979703,
+      "iterations_used": 220,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 56,
+        "max_generations": 220,
+        "crossover_rate": 0.88,
+        "mutation_rate": 0.02,
+        "elite_count": 2,
+        "crossover_mode": "two_point",
+        "tournament_size": 3,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "seed": 202,
+      "best_satisfied": 587,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9783333333333334,
+      "runtime_seconds": 7.959433999960311,
+      "iterations_used": 220,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 56,
+        "max_generations": 220,
+        "crossover_rate": 0.88,
+        "mutation_rate": 0.02,
+        "elite_count": 2,
+        "crossover_mode": "two_point",
+        "tournament_size": 3,
+        "random_seed": 202
+      }
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "seed": 101,
+      "best_satisfied": 587,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9783333333333334,
+      "runtime_seconds": 14.85278349998407,
+      "iterations_used": 308,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 360,
+        "w_inertia": 0.72,
+        "c_parameter": 0.72,
+        "c_cognitive": 1.6,
+        "c_social": 1.8,
+        "local_search_every": 8,
+        "stagnation_limit": 45,
+        "max_restarts": 3,
+        "restarts_used": 4,
+        "random_seed": 101,
+        "method": "binary_pso_vshape"
+      }
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "seed": 202,
+      "best_satisfied": 580,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9666666666666667,
+      "runtime_seconds": 14.219676500069909,
+      "iterations_used": 292,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 360,
+        "w_inertia": 0.72,
+        "c_parameter": 0.72,
+        "c_cognitive": 1.6,
+        "c_social": 1.8,
+        "local_search_every": 8,
+        "stagnation_limit": 45,
+        "max_restarts": 3,
+        "restarts_used": 4,
+        "random_seed": 202,
+        "method": "binary_pso_vshape"
+      }
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "seed": 101,
+      "best_satisfied": 586,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9766666666666667,
+      "runtime_seconds": 27.32765410002321,
+      "iterations_used": 200,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 200,
+        "crossover_rate": 0.92,
+        "mutation_rate": 0.02,
+        "c_coefficient": 0.72,
+        "tournament_size": 3,
+        "stagnation_limit": 30,
+        "local_search_elite": true,
+        "random_seed": 101
+      }
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "seed": 202,
+      "best_satisfied": 583,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9716666666666667,
+      "runtime_seconds": 27.952588999993168,
+      "iterations_used": 200,
+      "fully_satisfied": false,
+      "params": {
+        "population_size": 60,
+        "max_iterations": 200,
+        "crossover_rate": 0.92,
+        "mutation_rate": 0.02,
+        "c_coefficient": 0.72,
+        "tournament_size": 3,
+        "stagnation_limit": 30,
+        "local_search_elite": true,
+        "random_seed": 202
+      }
+    }
+  ]
+}

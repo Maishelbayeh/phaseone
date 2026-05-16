@@ -13,11 +13,23 @@ import json
 from typing import List, Optional, Sequence, Tuple
 
 try:
-	random  # touch to keep import order tools from flagging reordering
-	from .utils import CNFFormula, Clause, Literal, validate_formula  # type: ignore
+    random  # touch to keep import order tools from flagging reordering
+    from .utils import (  # type: ignore
+        CNFFormula,
+        Clause,
+        Literal,
+        validate_formula,
+        validate_3sat_formula,
+    )
 except Exception:
-	# Fallback for running this file directly (not as package module).
-	from utils import CNFFormula, Clause, Literal, validate_formula  # type: ignore
+    # Fallback for running this file directly (not as package module).
+    from utils import (  # type: ignore
+        CNFFormula,
+        Clause,
+        Literal,
+        validate_formula,
+        validate_3sat_formula,
+    )
 
 
 def _sample_clause(num_variables: int, rng: random.Random) -> Clause:
@@ -71,7 +83,7 @@ def generate_random_3sat(
     ]
 
     formula = CNFFormula(num_variables=num_variables, clauses=tuple(clauses))
-    validate_formula(formula)
+    validate_3sat_formula(formula)
     return formula
 
 
@@ -162,24 +174,77 @@ def _save_instance(payload: dict, output_path: Path) -> None:
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
 
+def infer_num_variables_from_clauses(clauses_ints: Sequence[Sequence[int]]) -> int:
+    """
+    Infer n from 1-based integer literals: n = max abs(literal) over all clauses.
+
+    Raises:
+        ValueError: If no positive literal magnitude is found.
+    """
+    max_abs = 0
+    for clause in clauses_ints:
+        for lit in clause:
+            max_abs = max(max_abs, abs(int(lit)))
+    if max_abs < 1:
+        raise ValueError("Cannot infer num_variables: clauses contain no literals.")
+    return max_abs
+
+
 def _literal_ints_to_formula(n: int, clauses_ints: Sequence[Sequence[int]]) -> CNFFormula:
     """
-    Convert assignment-specified literal encoding (1-based ints, negative for NOT)
-    back into internal CNFFormula with 0-based variable indices.
+    Convert literal encoding (1-based ints, negative for NOT) to ``CNFFormula``.
+
+    Each inner sequence is one clause (OR of literals); clause length may vary.
     """
     clauses: List[Clause] = []
-    for triple in clauses_ints:
-        a, b, c = triple
+    for clause_index, clause_values in enumerate(clauses_ints):
+        if not clause_values:
+            raise ValueError(f"Clause {clause_index} is empty (not allowed in CNF).")
         lit_objs: List[Literal] = []
-        for value in (a, b, c):
+        for raw_value in clause_values:
+            value = int(raw_value)
             is_neg = value < 0
             var_one_based = -value if is_neg else value
+            if var_one_based < 1:
+                raise ValueError(f"Clause {clause_index}: invalid literal encoding {raw_value!r}.")
             var_zero_based = var_one_based - 1
+            if var_zero_based >= n:
+                raise ValueError(
+                    f"Clause {clause_index}: literal {raw_value!r} implies variable index "
+                    f"{var_zero_based} but num_variables is n={n}."
+                )
             lit_objs.append(Literal(variable_index=var_zero_based, is_negated=is_neg))
-        clauses.append((lit_objs[0], lit_objs[1], lit_objs[2]))
+        clauses.append(tuple(lit_objs))
     formula = CNFFormula(num_variables=n, clauses=tuple(clauses))
     validate_formula(formula)
     return formula
+
+
+def formula_from_int_clauses(
+    clauses_ints: Sequence[Sequence[int]],
+    *,
+    num_variables: Optional[int] = None,
+) -> CNFFormula:
+    """
+    Build a ``CNFFormula`` from MAX-SAT style clauses (lists of signed integers).
+
+    Args:
+        clauses_ints: Each clause is a sequence of non-zero integers; ``k`` means x_k,
+            ``-k`` means NOT x_k (variables are **1-based** in the input).
+        num_variables: If omitted, inferred as max |literal| across all clauses.
+
+    Returns:
+        Validated formula ready for search / evaluation.
+    """
+    inferred = infer_num_variables_from_clauses(clauses_ints)
+    n = inferred if num_variables is None else int(num_variables)
+    if n < 1:
+        raise ValueError("num_variables must be at least 1.")
+    if n < inferred:
+        raise ValueError(
+            f"num_variables={n} is smaller than max literal index ({inferred}) inferred from clauses."
+        )
+    return _literal_ints_to_formula(n, clauses_ints)
 
 
 def load_instance_formula(n: int, ratio: float) -> CNFFormula:

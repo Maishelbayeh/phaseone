@@ -1,0 +1,55 @@
+{
+  "best_enhanced_setting": {
+    "setting_label": "enhanced_trial_2",
+    "config": {
+      "mode": "enhanced",
+      "max_iterations": 4500,
+      "initial_temperature": 24.0,
+      "cooling_rate": 0.9975,
+      "min_temperature": 0.0005,
+      "restart_count": 2,
+      "restart_initialization_strategy": "polarity",
+      "elite_restart_transfer": true,
+      "elite_restart_perturbation": 3,
+      "unsatisfied_focus_probability": 0.6,
+      "candidate_pool_size": 10,
+      "multi_bit_flip_probability": 0.04,
+      "max_multi_flip_size": 2,
+      "stagnation_multi_bit_boost": 0.15,
+      "stagnation_limit": 70,
+      "reheat_multiplier": 1.5,
+      "max_reheats": 4,
+      "adaptive_cooling": true,
+      "adaptive_cooling_bonus": 0.0007,
+      "adaptive_cooling_penalty": 0.0025,
+      "intensification_threshold": 0.98,
+      "intensification_focus_probability": 0.94,
+      "intensification_cooling_bonus": 0.0009,
+      "mini_hill_climb_steps": 33,
+      "history_bias_strength": 0.72,
+      "polarity_bias_strength": 0.7
+    },
+    "mean_satisfaction_rate": 0.9939728682170542,
+    "full_satisfaction_count": 4,
+    "mean_runtime_seconds": 0.7693674888901619,
+    "success_rate": 0.4444444444444444,
+    "runtime_to_success": 1.7310768500028644,
+    "run_count": 9
+  },
+  "baseline_setting": {
+    "setting_label": "baseline",
+    "config": {
+      "mode": "baseline",
+      "max_iterations": 5000,
+      "initial_temperature": 12.0,
+      "cooling_rate": 0.997,
+      "min_temperature": 0.001
+    },
+    "mean_satisfaction_rate": 0.989405684754522,
+    "full_satisfaction_count": 2,
+    "mean_runtime_seconds": 1.7975785999636475,
+    "success_rate": 0.2222222222222222,
+    "runtime_to_success": 8.089103699836414,
+    "run_count": 9
+  }
+}

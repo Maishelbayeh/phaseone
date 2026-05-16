@@ -26,6 +26,7 @@ class TabuSearchResult:
     restart_count: int
     runtime_seconds: float
     merit_history: Tuple[int, ...]
+    runtime_history: Tuple[float, ...]
 
 
 def _random_truth_assignment(num_variables: int, rng: random.Random) -> TruthAssignment:
@@ -60,6 +61,7 @@ def tabu_search_solve(
 
     tabu_until_iteration: Dict[int, int] = {}
     history: List[int] = [best_merit]
+    runtime_history: List[float] = [0.0]
     iterations_used = 0
 
     for iteration in range(1, max_iterations + 1):
@@ -97,6 +99,7 @@ def tabu_search_solve(
 
         iterations_used = iteration
         history.append(best_merit)
+        runtime_history.append(time.perf_counter() - start_time)
         if best_merit == formula.num_clauses:
             break
 
@@ -110,4 +113,5 @@ def tabu_search_solve(
         restart_count=1,
         runtime_seconds=elapsed,
         merit_history=tuple(history),
+        runtime_history=tuple(runtime_history),
     )

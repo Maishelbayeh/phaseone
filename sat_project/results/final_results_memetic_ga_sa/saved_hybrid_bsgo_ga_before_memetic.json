@@ -1,0 +1,742 @@
+{
+  "overall": [
+    {
+      "algorithm_name": "Simulated Annealing",
+      "runs": 9,
+      "mean_best_satisfied": 657.5555555555555,
+      "mean_satisfaction_rate": 0.9909711455641689,
+      "mean_runtime_seconds": 2.736992644443591,
+      "max_best_satisfied": 1173,
+      "full_satisfy_count": 1
+    },
+    {
+      "algorithm_name": "Genetic Algorithm",
+      "runs": 9,
+      "mean_best_satisfied": 653.8888888888889,
+      "mean_satisfaction_rate": 0.9857543784094172,
+      "mean_runtime_seconds": 34.322372944430555,
+      "max_best_satisfied": 1167,
+      "full_satisfy_count": 0
+    },
+    {
+      "algorithm_name": "Hybrid BSGO-GA",
+      "runs": 9,
+      "mean_best_satisfied": 652.3333333333334,
+      "mean_satisfaction_rate": 0.9835300028710882,
+      "mean_runtime_seconds": 70.39323411110996,
+      "max_best_satisfied": 1172,
+      "full_satisfy_count": 1
+    },
+    {
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "runs": 9,
+      "mean_best_satisfied": 650.2222222222222,
+      "mean_satisfaction_rate": 0.9789721504450186,
+      "mean_runtime_seconds": 20.600197244448484,
+      "max_best_satisfied": 1166,
+      "full_satisfy_count": 0
+    }
+  ],
+  "by_ratio": {
+    "3.0": [
+      {
+        "algorithm_name": "Simulated Annealing",
+        "runs": 3,
+        "mean_best_satisfied": 449.3333333333333,
+        "mean_satisfaction_rate": 0.9987037037037036,
+        "mean_runtime_seconds": 1.5400419667130336,
+        "max_best_satisfied": 599,
+        "full_satisfy_count": 1
+      },
+      {
+        "algorithm_name": "Genetic Algorithm",
+        "runs": 3,
+        "mean_best_satisfied": 447.3333333333333,
+        "mean_satisfaction_rate": 0.9942592592592593,
+        "mean_runtime_seconds": 26.287161533293936,
+        "max_best_satisfied": 597,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Hybrid BSGO-GA",
+        "runs": 3,
+        "mean_best_satisfied": 446.3333333333333,
+        "mean_satisfaction_rate": 0.9933333333333333,
+        "mean_runtime_seconds": 53.70731649997955,
+        "max_best_satisfied": 590,
+        "full_satisfy_count": 1
+      },
+      {
+        "algorithm_name": "Binary Swarm (BSGO)",
+        "runs": 3,
+        "mean_best_satisfied": 443,
+        "mean_satisfaction_rate": 0.9848148148148148,
+        "mean_runtime_seconds": 20.281657133329038,
+        "max_best_satisfied": 590,
+        "full_satisfy_count": 0
+      }
+    ],
+    "4.3": [
+      {
+        "algorithm_name": "Simulated Annealing",
+        "runs": 3,
+        "mean_best_satisfied": 640.3333333333334,
+        "mean_satisfaction_rate": 0.9926356589147287,
+        "mean_runtime_seconds": 3.2267436666491753,
+        "max_best_satisfied": 853,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Genetic Algorithm",
+        "runs": 3,
+        "mean_best_satisfied": 637,
+        "mean_satisfaction_rate": 0.9877260981912145,
+        "mean_runtime_seconds": 27.52246579997397,
+        "max_best_satisfied": 847,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Hybrid BSGO-GA",
+        "runs": 3,
+        "mean_best_satisfied": 634.3333333333334,
+        "mean_satisfaction_rate": 0.984108527131783,
+        "mean_runtime_seconds": 69.50064486664876,
+        "max_best_satisfied": 843,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Binary Swarm (BSGO)",
+        "runs": 3,
+        "mean_best_satisfied": 633.3333333333334,
+        "mean_satisfaction_rate": 0.9806201550387597,
+        "mean_runtime_seconds": 17.57881003334963,
+        "max_best_satisfied": 846,
+        "full_satisfy_count": 0
+      }
+    ],
+    "6.0": [
+      {
+        "algorithm_name": "Simulated Annealing",
+        "runs": 3,
+        "mean_best_satisfied": 883,
+        "mean_satisfaction_rate": 0.981574074074074,
+        "mean_runtime_seconds": 3.444192299968563,
+        "max_best_satisfied": 1173,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Genetic Algorithm",
+        "runs": 3,
+        "mean_best_satisfied": 877.3333333333334,
+        "mean_satisfaction_rate": 0.9752777777777778,
+        "mean_runtime_seconds": 49.15749150002375,
+        "max_best_satisfied": 1167,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Hybrid BSGO-GA",
+        "runs": 3,
+        "mean_best_satisfied": 876.3333333333334,
+        "mean_satisfaction_rate": 0.9731481481481482,
+        "mean_runtime_seconds": 87.97174096670157,
+        "max_best_satisfied": 1172,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Binary Swarm (BSGO)",
+        "runs": 3,
+        "mean_best_satisfied": 874.3333333333334,
+        "mean_satisfaction_rate": 0.9714814814814815,
+        "mean_runtime_seconds": 23.940124566666782,
+        "max_best_satisfied": 1166,
+        "full_satisfy_count": 0
+      }
+    ]
+  },
+  "by_n": {
+    "100": [
+      {
+        "algorithm_name": "Simulated Annealing",
+        "runs": 3,
+        "mean_best_satisfied": 438.3333333333333,
+        "mean_satisfaction_rate": 0.9907881136950905,
+        "mean_runtime_seconds": 1.6502037333557382,
+        "max_best_satisfied": 589,
+        "full_satisfy_count": 1
+      },
+      {
+        "algorithm_name": "Genetic Algorithm",
+        "runs": 3,
+        "mean_best_satisfied": 436.3333333333333,
+        "mean_satisfaction_rate": 0.9864599483204135,
+        "mean_runtime_seconds": 21.851919666631147,
+        "max_best_satisfied": 586,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Hybrid BSGO-GA",
+        "runs": 3,
+        "mean_best_satisfied": 435.3333333333333,
+        "mean_satisfaction_rate": 0.9847932816537468,
+        "mean_runtime_seconds": 41.45743830001447,
+        "max_best_satisfied": 583,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Binary Swarm (BSGO)",
+        "runs": 3,
+        "mean_best_satisfied": 432.3333333333333,
+        "mean_satisfaction_rate": 0.9768087855297157,
+        "mean_runtime_seconds": 11.192703433334827,
+        "max_best_satisfied": 583,
+        "full_satisfy_count": 0
+      }
+    ],
+    "150": [
+      {
+        "algorithm_name": "Simulated Annealing",
+        "runs": 3,
+        "mean_best_satisfied": 659.3333333333334,
+        "mean_satisfaction_rate": 0.9928940568475452,
+        "mean_runtime_seconds": 2.8441301666510603,
+        "max_best_satisfied": 887,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Genetic Algorithm",
+        "runs": 3,
+        "mean_best_satisfied": 655,
+        "mean_satisfaction_rate": 0.9866752799310939,
+        "mean_runtime_seconds": 38.707869166663535,
+        "max_best_satisfied": 879,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Hybrid BSGO-GA",
+        "runs": 3,
+        "mean_best_satisfied": 653.3333333333334,
+        "mean_satisfaction_rate": 0.9857192075796727,
+        "mean_runtime_seconds": 52.323286366687775,
+        "max_best_satisfied": 874,
+        "full_satisfy_count": 1
+      },
+      {
+        "algorithm_name": "Binary Swarm (BSGO)",
+        "runs": 3,
+        "mean_best_satisfied": 651,
+        "mean_satisfaction_rate": 0.9805340223944875,
+        "mean_runtime_seconds": 18.840400966699235,
+        "max_best_satisfied": 874,
+        "full_satisfy_count": 0
+      }
+    ],
+    "200": [
+      {
+        "algorithm_name": "Simulated Annealing",
+        "runs": 3,
+        "mean_best_satisfied": 875,
+        "mean_satisfaction_rate": 0.9892312661498708,
+        "mean_runtime_seconds": 3.7166440333239734,
+        "max_best_satisfied": 1173,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Genetic Algorithm",
+        "runs": 3,
+        "mean_best_satisfied": 870.3333333333334,
+        "mean_satisfaction_rate": 0.9841279069767442,
+        "mean_runtime_seconds": 42.40732999999697,
+        "max_best_satisfied": 1167,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Hybrid BSGO-GA",
+        "runs": 3,
+        "mean_best_satisfied": 868.3333333333334,
+        "mean_satisfaction_rate": 0.980077519379845,
+        "mean_runtime_seconds": 117.39897766662762,
+        "max_best_satisfied": 1172,
+        "full_satisfy_count": 0
+      },
+      {
+        "algorithm_name": "Binary Swarm (BSGO)",
+        "runs": 3,
+        "mean_best_satisfied": 867.3333333333334,
+        "mean_satisfaction_rate": 0.9795736434108527,
+        "mean_runtime_seconds": 31.76748733331139,
+        "max_best_satisfied": 1166,
+        "full_satisfy_count": 0
+      }
+    ]
+  },
+  "per_run": [
+    {
+      "instance": "3sat_n100_r3.json",
+      "n": 100,
+      "ratio": 3.0,
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "best_satisfied": 300,
+      "total_clauses": 300,
+      "satisfaction_rate": 1.0,
+      "runtime_seconds": 0.46219850005581975,
+      "iterations_used": 1337,
+      "fully_satisfied": true
+    },
+    {
+      "instance": "3sat_n100_r3.json",
+      "n": 100,
+      "ratio": 3.0,
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "best_satisfied": 299,
+      "total_clauses": 300,
+      "satisfaction_rate": 0.9966666666666667,
+      "runtime_seconds": 10.168059199932031,
+      "iterations_used": 200,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n100_r3.json",
+      "n": 100,
+      "ratio": 3.0,
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "best_satisfied": 296,
+      "total_clauses": 300,
+      "satisfaction_rate": 0.9866666666666667,
+      "runtime_seconds": 5.290562100009993,
+      "iterations_used": 216,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n100_r3.json",
+      "n": 100,
+      "ratio": 3.0,
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "best_satisfied": 299,
+      "total_clauses": 300,
+      "satisfaction_rate": 0.9966666666666667,
+      "runtime_seconds": 17.365372200030833,
+      "iterations_used": 180,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "n": 100,
+      "ratio": 4.3,
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "best_satisfied": 426,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9906976744186047,
+      "runtime_seconds": 1.1479387000435963,
+      "iterations_used": 3127,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "n": 100,
+      "ratio": 4.3,
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "best_satisfied": 424,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.986046511627907,
+      "runtime_seconds": 13.926015799981542,
+      "iterations_used": 200,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "n": 100,
+      "ratio": 4.3,
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "best_satisfied": 418,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.9720930232558139,
+      "runtime_seconds": 7.152836399967782,
+      "iterations_used": 208,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n100_r4.3.json",
+      "n": 100,
+      "ratio": 4.3,
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "best_satisfied": 424,
+      "total_clauses": 430,
+      "satisfaction_rate": 0.986046511627907,
+      "runtime_seconds": 36.79245639999863,
+      "iterations_used": 180,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "n": 100,
+      "ratio": 6.0,
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "best_satisfied": 589,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9816666666666667,
+      "runtime_seconds": 3.3404739999677986,
+      "iterations_used": 3127,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "n": 100,
+      "ratio": 6.0,
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "best_satisfied": 586,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9766666666666667,
+      "runtime_seconds": 41.46168399997987,
+      "iterations_used": 200,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "n": 100,
+      "ratio": 6.0,
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "best_satisfied": 583,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9716666666666667,
+      "runtime_seconds": 21.134711800026707,
+      "iterations_used": 232,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n100_r6.json",
+      "n": 100,
+      "ratio": 6.0,
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "best_satisfied": 583,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9716666666666667,
+      "runtime_seconds": 70.21448630001396,
+      "iterations_used": 180,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r3.json",
+      "n": 150,
+      "ratio": 3.0,
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "best_satisfied": 449,
+      "total_clauses": 450,
+      "satisfaction_rate": 0.9977777777777778,
+      "runtime_seconds": 2.37019460008014,
+      "iterations_used": 3127,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r3.json",
+      "n": 150,
+      "ratio": 3.0,
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "best_satisfied": 446,
+      "total_clauses": 450,
+      "satisfaction_rate": 0.9911111111111112,
+      "runtime_seconds": 32.925057900021784,
+      "iterations_used": 200,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r3.json",
+      "n": 150,
+      "ratio": 3.0,
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "best_satisfied": 443,
+      "total_clauses": 450,
+      "satisfaction_rate": 0.9844444444444445,
+      "runtime_seconds": 20.531989500042982,
+      "iterations_used": 256,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r3.json",
+      "n": 150,
+      "ratio": 3.0,
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "best_satisfied": 450,
+      "total_clauses": 450,
+      "satisfaction_rate": 1.0,
+      "runtime_seconds": 22.63294829998631,
+      "iterations_used": 88,
+      "fully_satisfied": true
+    },
+    {
+      "instance": "3sat_n150_r4.3.json",
+      "n": 150,
+      "ratio": 4.3,
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "best_satisfied": 642,
+      "total_clauses": 645,
+      "satisfaction_rate": 0.9953488372093023,
+      "runtime_seconds": 3.444753099931404,
+      "iterations_used": 3127,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r4.3.json",
+      "n": 150,
+      "ratio": 4.3,
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "best_satisfied": 640,
+      "total_clauses": 645,
+      "satisfaction_rate": 0.9922480620155039,
+      "runtime_seconds": 27.780303399893455,
+      "iterations_used": 200,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r4.3.json",
+      "n": 150,
+      "ratio": 4.3,
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "best_satisfied": 636,
+      "total_clauses": 645,
+      "satisfaction_rate": 0.986046511627907,
+      "runtime_seconds": 16.093312500044703,
+      "iterations_used": 288,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r4.3.json",
+      "n": 150,
+      "ratio": 4.3,
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "best_satisfied": 636,
+      "total_clauses": 645,
+      "satisfaction_rate": 0.986046511627907,
+      "runtime_seconds": 60.60286250000354,
+      "iterations_used": 210,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r6.json",
+      "n": 150,
+      "ratio": 6.0,
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "best_satisfied": 887,
+      "total_clauses": 900,
+      "satisfaction_rate": 0.9855555555555555,
+      "runtime_seconds": 2.7174427999416366,
+      "iterations_used": 3127,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r6.json",
+      "n": 150,
+      "ratio": 6.0,
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "best_satisfied": 879,
+      "total_clauses": 900,
+      "satisfaction_rate": 0.9766666666666667,
+      "runtime_seconds": 55.41824620007537,
+      "iterations_used": 200,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r6.json",
+      "n": 150,
+      "ratio": 6.0,
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "best_satisfied": 874,
+      "total_clauses": 900,
+      "satisfaction_rate": 0.9711111111111111,
+      "runtime_seconds": 19.89590090001002,
+      "iterations_used": 256,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n150_r6.json",
+      "n": 150,
+      "ratio": 6.0,
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "best_satisfied": 874,
+      "total_clauses": 900,
+      "satisfaction_rate": 0.9711111111111111,
+      "runtime_seconds": 73.73404830007348,
+      "iterations_used": 210,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r3.json",
+      "n": 200,
+      "ratio": 3.0,
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "best_satisfied": 599,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9983333333333333,
+      "runtime_seconds": 1.7877328000031412,
+      "iterations_used": 3127,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r3.json",
+      "n": 200,
+      "ratio": 3.0,
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "best_satisfied": 597,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.995,
+      "runtime_seconds": 35.76836749992799,
+      "iterations_used": 220,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r3.json",
+      "n": 200,
+      "ratio": 3.0,
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "best_satisfied": 590,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9833333333333333,
+      "runtime_seconds": 35.02241979993414,
+      "iterations_used": 280,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r3.json",
+      "n": 200,
+      "ratio": 3.0,
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "best_satisfied": 590,
+      "total_clauses": 600,
+      "satisfaction_rate": 0.9833333333333333,
+      "runtime_seconds": 121.1236289999215,
+      "iterations_used": 230,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r4.3.json",
+      "n": 200,
+      "ratio": 4.3,
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "best_satisfied": 853,
+      "total_clauses": 860,
+      "satisfaction_rate": 0.9918604651162791,
+      "runtime_seconds": 5.087539199972525,
+      "iterations_used": 3127,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r4.3.json",
+      "n": 200,
+      "ratio": 4.3,
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "best_satisfied": 847,
+      "total_clauses": 860,
+      "satisfaction_rate": 0.9848837209302326,
+      "runtime_seconds": 40.861078200046904,
+      "iterations_used": 220,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r4.3.json",
+      "n": 200,
+      "ratio": 4.3,
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "best_satisfied": 846,
+      "total_clauses": 860,
+      "satisfaction_rate": 0.9837209302325581,
+      "runtime_seconds": 29.490281200036407,
+      "iterations_used": 320,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r4.3.json",
+      "n": 200,
+      "ratio": 4.3,
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "best_satisfied": 843,
+      "total_clauses": 860,
+      "satisfaction_rate": 0.9802325581395349,
+      "runtime_seconds": 111.10661569994409,
+      "iterations_used": 230,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r6.json",
+      "n": 200,
+      "ratio": 6.0,
+      "solver_key": "simulated_annealing",
+      "algorithm_name": "Simulated Annealing",
+      "best_satisfied": 1173,
+      "total_clauses": 1200,
+      "satisfaction_rate": 0.9775,
+      "runtime_seconds": 4.274660099996254,
+      "iterations_used": 3127,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r6.json",
+      "n": 200,
+      "ratio": 6.0,
+      "solver_key": "genetic_algorithm",
+      "algorithm_name": "Genetic Algorithm",
+      "best_satisfied": 1167,
+      "total_clauses": 1200,
+      "satisfaction_rate": 0.9725,
+      "runtime_seconds": 50.592544300016016,
+      "iterations_used": 220,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r6.json",
+      "n": 200,
+      "ratio": 6.0,
+      "solver_key": "binary_swarm_solver",
+      "algorithm_name": "Binary Swarm (BSGO)",
+      "best_satisfied": 1166,
+      "total_clauses": 1200,
+      "satisfaction_rate": 0.9716666666666667,
+      "runtime_seconds": 30.78976099996362,
+      "iterations_used": 304,
+      "fully_satisfied": false
+    },
+    {
+      "instance": "3sat_n200_r6.json",
+      "n": 200,
+      "ratio": 6.0,
+      "solver_key": "hybrid_bsgo_ga",
+      "algorithm_name": "Hybrid BSGO-GA",
+      "best_satisfied": 1172,
+      "total_clauses": 1200,
+      "satisfaction_rate": 0.9766666666666667,
+      "runtime_seconds": 119.96668830001727,
+      "iterations_used": 230,
+      "fully_satisfied": false
+    }
+  ]
+}

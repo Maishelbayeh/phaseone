@@ -24,8 +24,8 @@ class Literal(NamedTuple):
     is_negated: bool
 
 
-# A 3-SAT clause is exactly three literals, combined with OR inside the clause.
-Clause = Tuple[Literal, Literal, Literal]
+# A CNF clause is a disjunction (OR) of one or more literals.
+Clause = Tuple[Literal, ...]
 
 
 @dataclass(frozen=True)
@@ -35,8 +35,13 @@ class CNFFormula:
 
     Attributes:
         num_variables: Number of Boolean variables (n). Variables are indexed 0..n-1.
-        clauses: List of clauses; each clause has exactly three literals.
+        clauses: Tuple of clauses; each clause is a tuple of literals (OR).
                  The whole formula is the AND of all clauses.
+
+    Note:
+        Clause length may vary (general CNF / MAX-SAT). Random 3-SAT generation
+        still produces exactly three literals per clause; use ``validate_3sat_formula``
+        after generation when strict 3-SAT invariants are required.
     """
 
     num_variables: int
@@ -52,9 +57,13 @@ class CNFFormula:
 TruthAssignment = List[bool]
 
 
-def validate_formula(formula: CNFFormula) -> None:
+def validate_formula(formula: CNFFormula, *, min_literals_per_clause: int = 1) -> None:
     """
-    Check structural invariants of a CNF formula.
+    Check structural invariants of a CNF / MAX-SAT formula.
+
+    Args:
+        formula: Formula to validate.
+        min_literals_per_clause: Minimum literals per clause (default 1).
 
     Raises:
         ValueError: If num_variables is invalid or any clause is malformed.
@@ -62,6 +71,28 @@ def validate_formula(formula: CNFFormula) -> None:
     if formula.num_variables < 1:
         raise ValueError("num_variables must be at least 1.")
 
+    for clause_index, clause in enumerate(formula.clauses):
+        if len(clause) < min_literals_per_clause:
+            raise ValueError(
+                f"Clause {clause_index} must contain at least {min_literals_per_clause} "
+                f"literal(s); got {len(clause)}."
+            )
+
+        for literal in clause:
+            if not (0 <= literal.variable_index < formula.num_variables):
+                raise ValueError(
+                    f"Clause {clause_index}: variable_index {literal.variable_index} "
+                    f"out of range for n={formula.num_variables}."
+                )
+
+
+def validate_3sat_formula(formula: CNFFormula) -> None:
+    """
+    Strict 3-SAT checks: each clause has exactly three literals on distinct variables.
+
+    Raises:
+        ValueError: If any clause violates 3-SAT structure.
+    """
     for clause_index, clause in enumerate(formula.clauses):
         if len(clause) != 3:
             raise ValueError(

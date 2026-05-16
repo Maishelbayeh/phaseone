@@ -1,0 +1,80 @@
+{
+  "Hill Climbing": {
+    "satisfaction_rate": 1.0,
+    "best_satisfied_clauses": 300,
+    "runtime_seconds": 1.3420643999997992,
+    "random_seed": 457,
+    "params": {
+      "max_iterations_per_restart": 1200,
+      "max_random_restarts": 10,
+      "random_seed": 457
+    }
+  },
+  "Simulated Annealing": {
+    "satisfaction_rate": 1.0,
+    "best_satisfied_clauses": 300,
+    "runtime_seconds": 0.15837600000668317,
+    "random_seed": 457,
+    "params": {
+      "max_iterations": 2800,
+      "initial_temperature": 10.0,
+      "cooling_rate": 0.995,
+      "min_temperature": 0.01,
+      "random_seed": 457
+    }
+  },
+  "Tabu Search": {
+    "satisfaction_rate": 1.0,
+    "best_satisfied_clauses": 300,
+    "runtime_seconds": 2.304849900014233,
+    "random_seed": 456,
+    "params": {
+      "max_iterations": 2800,
+      "tabu_tenure": 10,
+      "random_seed": 456
+    }
+  },
+  "Hybrid BSGO-GA": {
+    "satisfaction_rate": 0.9966666666666667,
+    "best_satisfied_clauses": 299,
+    "runtime_seconds": 6.684357699996326,
+    "random_seed": 456,
+    "params": {
+      "population_size": 90,
+      "max_iterations": 200,
+      "crossover_rate": 0.85,
+      "mutation_rate": 0.02,
+      "c_coefficient": 0.72,
+      "random_seed": 456
+    }
+  },
+  "Genetic Algorithm": {
+    "satisfaction_rate": 1.0,
+    "best_satisfied_clauses": 300,
+    "runtime_seconds": 0.7207185000006575,
+    "random_seed": 456,
+    "params": {
+      "population_size": 96,
+      "max_generations": 200,
+      "crossover_rate": 0.9,
+      "mutation_rate": 0.02,
+      "elite_count": 2,
+      "crossover_mode": "two_point",
+      "tournament_size": 3,
+      "random_seed": 456
+    }
+  },
+  "Binary Swarm (BSGO)": {
+    "satisfaction_rate": 0.96,
+    "best_satisfied_clauses": 288,
+    "runtime_seconds": 4.303856100013945,
+    "random_seed": 459,
+    "params": {
+      "population_size": 96,
+      "max_iterations": 200,
+      "c_parameter": 0.72,
+      "random_seed": 459,
+      "method": "pure_binary_sgo"
+    }
+  }
+}

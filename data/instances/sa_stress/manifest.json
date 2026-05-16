@@ -1,0 +1,83 @@
+[
+  {
+    "instance_name": "3sat_n100_r3_i00.json",
+    "n": 100,
+    "m": 300,
+    "ratio": 3.0,
+    "generator_seed": 103002442,
+    "instance_index": 0,
+    "file_path": "D:\\optimaization\\phaseone\\data\\instances\\sa_stress\\3sat_n100_r3_i00.json"
+  },
+  {
+    "instance_name": "3sat_n100_r4.3_i00.json",
+    "n": 100,
+    "m": 430,
+    "ratio": 4.3,
+    "generator_seed": 104303352,
+    "instance_index": 0,
+    "file_path": "D:\\optimaization\\phaseone\\data\\instances\\sa_stress\\3sat_n100_r4.3_i00.json"
+  },
+  {
+    "instance_name": "3sat_n100_r6_i00.json",
+    "n": 100,
+    "m": 600,
+    "ratio": 6.0,
+    "generator_seed": 106004542,
+    "instance_index": 0,
+    "file_path": "D:\\optimaization\\phaseone\\data\\instances\\sa_stress\\3sat_n100_r6_i00.json"
+  },
+  {
+    "instance_name": "3sat_n150_r3_i00.json",
+    "n": 150,
+    "m": 450,
+    "ratio": 3.0,
+    "generator_seed": 153002592,
+    "instance_index": 0,
+    "file_path": "D:\\optimaization\\phaseone\\data\\instances\\sa_stress\\3sat_n150_r3_i00.json"
+  },
+  {
+    "instance_name": "3sat_n150_r4.3_i00.json",
+    "n": 150,
+    "m": 645,
+    "ratio": 4.3,
+    "generator_seed": 154303502,
+    "instance_index": 0,
+    "file_path": "D:\\optimaization\\phaseone\\data\\instances\\sa_stress\\3sat_n150_r4.3_i00.json"
+  },
+  {
+    "instance_name": "3sat_n150_r6_i00.json",
+    "n": 150,
+    "m": 900,
+    "ratio": 6.0,
+    "generator_seed": 156004692,
+    "instance_index": 0,
+    "file_path": "D:\\optimaization\\phaseone\\data\\instances\\sa_stress\\3sat_n150_r6_i00.json"
+  },
+  {
+    "instance_name": "3sat_n200_r3_i00.json",
+    "n": 200,
+    "m": 600,
+    "ratio": 3.0,
+    "generator_seed": 203002742,
+    "instance_index": 0,
+    "file_path": "D:\\optimaization\\phaseone\\data\\instances\\sa_stress\\3sat_n200_r3_i00.json"
+  },
+  {
+    "instance_name": "3sat_n200_r4.3_i00.json",
+    "n": 200,
+    "m": 860,
+    "ratio": 4.3,
+    "generator_seed": 204303652,
+    "instance_index": 0,
+    "file_path": "D:\\optimaization\\phaseone\\data\\instances\\sa_stress\\3sat_n200_r4.3_i00.json"
+  },
+  {
+    "instance_name": "3sat_n200_r6_i00.json",
+    "n": 200,
+    "m": 1200,
+    "ratio": 6.0,
+    "generator_seed": 206004842,
+    "instance_index": 0,
+    "file_path": "D:\\optimaization\\phaseone\\data\\instances\\sa_stress\\3sat_n200_r6_i00.json"
+  }
+]

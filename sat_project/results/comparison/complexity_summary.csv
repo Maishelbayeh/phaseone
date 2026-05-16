@@ -1,0 +1,7 @@
+algorithm_name,estimated_time_complexity,empirical_scaling_exponent_loglog,empirical_fit_r2,empirical_samples,complexity_note
+Hill Climbing,O(I * n * m) with random restarts folded into I,2.934600691938109,0.9985926592427925,5,Implementation-level estimated complexity and empirical runtime scaling; not a formal proof.
+Simulated Annealing,O(I * m),1.406079793730885,0.9635933014725965,5,Implementation-level estimated complexity and empirical runtime scaling; not a formal proof.
+Tabu Search,O(I * n * m),4.032095226229073,0.9920350187695052,5,Implementation-level estimated complexity and empirical runtime scaling; not a formal proof.
+Hybrid BSGO-GA,O(I * P * n * m),2.024137529906938,0.9951353926492628,5,Implementation-level estimated complexity and empirical runtime scaling; not a formal proof.
+Genetic Algorithm,O(I * P * m),1.8654775145805058,0.9984724676189928,5,Implementation-level estimated complexity and empirical runtime scaling; not a formal proof.
+Binary Swarm (BSGO),O(I * P * m),1.9013760582218768,0.999216716946916,5,Implementation-level estimated complexity and empirical runtime scaling; not a formal proof.

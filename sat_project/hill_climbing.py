@@ -47,6 +47,9 @@ class HillClimbingResult:
     merit_history: Tuple[int, ...]
     """Best-so-far merit after each recorded step (used for convergence plots)."""
 
+    runtime_history: Tuple[float, ...]
+    """Cumulative runtime aligned with merit_history (seconds)."""
+
 
 def _random_truth_assignment(num_variables: int, rng: random.Random) -> TruthAssignment:
     """Build a random True/False assignment for all variables."""
@@ -142,6 +145,7 @@ def hill_climb_with_random_restarts(
     start_time = time.perf_counter()
 
     history: List[int] = []
+    runtime_history: List[float] = []
     global_best_merit = -1
     global_best_assignment: Optional[TruthAssignment] = None
     total_iterations = 0
@@ -156,6 +160,7 @@ def hill_climb_with_random_restarts(
             current_assignment, current_merit, global_best_merit, global_best_assignment
         )
         history.append(global_best_merit)
+        runtime_history.append(time.perf_counter() - start_time)
 
         if is_formula_fully_satisfied(formula, current_assignment):
             break
@@ -178,6 +183,7 @@ def hill_climb_with_random_restarts(
                 current_assignment, current_merit, global_best_merit, global_best_assignment
             )
             history.append(global_best_merit)
+            runtime_history.append(time.perf_counter() - start_time)
 
             if current_merit == formula.num_clauses:
                 break
@@ -198,4 +204,5 @@ def hill_climb_with_random_restarts(
         restart_count=restarts_started,
         runtime_seconds=elapsed,
         merit_history=tuple(history),
+        runtime_history=tuple(runtime_history),
     )

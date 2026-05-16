@@ -6,7 +6,41 @@ Merit (fitness) for local search is the number of satisfied clauses.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from utils import CNFFormula, Literal, TruthAssignment
+
+
+@dataclass(frozen=True)
+class MaxSATEvaluation:
+    """Detailed MAX-SAT / CNF evaluation of one complete assignment."""
+
+    satisfied_clauses_count: int
+    total_clauses: int
+    satisfaction_rate: float
+    fully_satisfied: bool
+
+
+def evaluate_maxsat_assignment(formula: CNFFormula, assignment: TruthAssignment) -> MaxSATEvaluation:
+    """
+    Compute satisfied clause count, rate, and full satisfaction for an assignment.
+
+    Args:
+        formula: CNF formula (any clause length >= 1).
+        assignment: assignment[var] is True iff variable var is True.
+
+    Returns:
+        Structured evaluation metrics.
+    """
+    total = formula.num_clauses
+    satisfied = count_satisfied_clauses(formula, assignment)
+    rate = 0.0 if total == 0 else float(satisfied) / float(total)
+    return MaxSATEvaluation(
+        satisfied_clauses_count=satisfied,
+        total_clauses=total,
+        satisfaction_rate=rate,
+        fully_satisfied=satisfied == total and total > 0,
+    )
 
 
 def evaluate_literal(literal: Literal, assignment: TruthAssignment) -> bool:
@@ -27,7 +61,7 @@ def evaluate_literal(literal: Literal, assignment: TruthAssignment) -> bool:
 
 
 def is_clause_satisfied(
-    clause: tuple[Literal, Literal, Literal], assignment: TruthAssignment
+    clause: tuple[Literal, ...], assignment: TruthAssignment
 ) -> bool:
     """
     True iff at least one literal in the clause is True (OR semantics).
